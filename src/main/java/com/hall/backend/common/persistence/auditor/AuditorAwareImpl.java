@@ -1,6 +1,6 @@
 package com.hall.backend.common.persistence.auditor;
 
-import com.hall.backend.auth.infrastructure.auth.AuthenticatedMember;
+import com.hall.backend.auth.infrastructure.security.AuthenticatedMember;
 import java.util.Optional;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
