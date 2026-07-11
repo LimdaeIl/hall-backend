@@ -7,7 +7,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "security.jwt")
 public record JwtProperties(
         String issuer,
-        String secret,
+        String base64Secret,
         Duration accessTokenExpiration,
         Duration refreshTokenExpiration
 ) {
@@ -15,29 +15,36 @@ public record JwtProperties(
     public JwtProperties {
         if (issuer == null || issuer.isBlank()) {
             throw new IllegalArgumentException(
-                    "JWT issuer는 비어 있을 수 없습니다."
+                    "JWT 발급자 정보는 비어 있을 수 없습니다."
             );
         }
 
-        if (secret == null || secret.isBlank()) {
+        if (base64Secret == null || base64Secret.isBlank()) {
             throw new IllegalArgumentException(
-                    "JWT secret은 비어 있을 수 없습니다."
+                    "JWT 비밀 키는 비어 있을 수 없습니다."
             );
         }
 
-        if (accessTokenExpiration == null
-                || accessTokenExpiration.isZero()
-                || accessTokenExpiration.isNegative()) {
-            throw new IllegalArgumentException(
-                    "Access Token 만료 시간은 양수여야 합니다."
-            );
-        }
+        validateExpiration(
+                accessTokenExpiration,
+                "Access Token"
+        );
 
-        if (refreshTokenExpiration == null
-                || refreshTokenExpiration.isZero()
-                || refreshTokenExpiration.isNegative()) {
+        validateExpiration(
+                refreshTokenExpiration,
+                "Refresh Token"
+        );
+    }
+
+    private static void validateExpiration(
+            Duration expiration,
+            String tokenName
+    ) {
+        if (expiration == null
+                || expiration.isZero()
+                || expiration.isNegative()) {
             throw new IllegalArgumentException(
-                    "Refresh Token 만료 시간은 양수여야 합니다."
+                    tokenName + " 만료 시간은 양수여야 합니다."
             );
         }
     }

@@ -1,5 +1,6 @@
 package com.hall.backend.auth.infrastructure.security;
 
+import com.hall.backend.auth.exception.AuthErrorCode;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -54,14 +56,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.setContext(context);
 
             filterChain.doFilter(request, response);
+
         } catch (JwtException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
 
             authenticationEntryPoint.commence(
                     request,
                     response,
-                    new JwtAuthenticationException(
-                            "유효하지 않은 Access Token입니다.",
+                    new BadCredentialsException(
+                            AuthErrorCode.INVALID_ACCESS_TOKEN.message(),
                             exception
                     )
             );
