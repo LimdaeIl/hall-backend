@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+
+  <!-- INFO 이상 전체 애플리케이션 로그 -->
+  <appender name="APP_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <!-- INFO, WARN, ERROR 저장 -->
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
+
+    <file>${APP_FILE}</file>
+
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+
+    <!-- 날짜 + 크기 기반 롤링 -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${APP_FILE}.%d{yyyy-MM-dd, ${logback.timezone:-Asia/Seoul}}.%i.gz</fileNamePattern>
+      <maxFileSize>100MB</maxFileSize>
+      <maxHistory>10</maxHistory>
+      <totalSizeCap>5GB</totalSizeCap>
+      <cleanHistoryOnStart>false</cleanHistoryOnStart>
+    </rollingPolicy>
+
+  </appender>
+
+</included>
