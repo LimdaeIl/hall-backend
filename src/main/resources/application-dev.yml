@@ -37,7 +37,7 @@ spring:
 
 security:
   jwt:
-    secret: ${JWT_SECRET}
+    base64Secret: ${JWT_SECRET}
     issuer: ${JWT_ISSUER}
     accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRE}
     refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRE}

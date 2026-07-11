@@ -1,7 +1,8 @@
 package com.hall.backend.auth.infrastructure.security;
 
+import com.hall.backend.auth.exception.AuthErrorCode;
+import com.hall.backend.auth.exception.AuthException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -15,15 +16,17 @@ public final class SecurityUtils {
     public static AuthenticatedMember getAuthenticatedMember() {
         return findAuthenticatedMember()
                 .orElseThrow(() ->
-                        new AuthenticationCredentialsNotFoundException(
-                                "현재 인증된 회원이 없습니다."
+                        new AuthException(
+                                AuthErrorCode.UNAUTHENTICATED_MEMBER
                         )
                 );
     }
 
     public static Optional<AuthenticatedMember> findAuthenticatedMember() {
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
         if (!isAuthenticated(authentication)) {
             return Optional.empty();
@@ -48,14 +51,19 @@ public final class SecurityUtils {
 
     public static boolean isAuthenticated() {
         Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
 
         return isAuthenticated(authentication);
     }
 
-    private static boolean isAuthenticated(Authentication authentication) {
+    private static boolean isAuthenticated(
+            Authentication authentication
+    ) {
         return authentication != null
                 && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken);
+                && !(authentication
+                instanceof AnonymousAuthenticationToken);
     }
 }

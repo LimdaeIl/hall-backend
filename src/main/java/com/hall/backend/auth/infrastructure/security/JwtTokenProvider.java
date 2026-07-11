@@ -11,6 +11,7 @@ import javax.crypto.SecretKey;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 
 @Component
 public class JwtTokenProvider {
@@ -18,28 +19,41 @@ public class JwtTokenProvider {
     private static final String ROLE_CLAIM = "role";
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
 
-    private static final String ACCESS_TOKEN_TYPE = "ACCESS";
-    private static final String REFRESH_TOKEN_TYPE = "REFRESH";
-
     private final JwtProperties properties;
     private final SecretKey secretKey;
     private final Clock clock;
 
     public JwtTokenProvider(JwtProperties properties) {
         this.properties = properties;
+        this.secretKey = createSecretKey(properties.base64Secret());
         this.clock = Clock.systemUTC();
-        this.secretKey = createSecretKey(properties.secret());
     }
 
-    public String createAccessToken(Long memberId, String role) {
+    public String createAccessToken(
+            Long memberId,
+            String role
+    ) {
+        validateMemberId(memberId);
+
+        if (role == null || role.isBlank()) {
+            throw new IllegalArgumentException(
+                    "회원 권한은 비어 있을 수 없습니다."
+            );
+        }
+
         Instant issuedAt = clock.instant();
-        Instant expiresAt = issuedAt.plus(properties.accessTokenExpiration());
+        Instant expiresAt = issuedAt.plus(
+                properties.accessTokenExpiration()
+        );
 
         return Jwts.builder()
                 .issuer(properties.issuer())
                 .subject(memberId.toString())
                 .claim(ROLE_CLAIM, role)
-                .claim(TOKEN_TYPE_CLAIM, ACCESS_TOKEN_TYPE)
+                .claim(
+                        TOKEN_TYPE_CLAIM,
+                        TokenType.ACCESS.name()
+                )
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
@@ -47,41 +61,74 @@ public class JwtTokenProvider {
     }
 
     public String createRefreshToken(Long memberId) {
+        validateMemberId(memberId);
+
         Instant issuedAt = clock.instant();
-        Instant expiresAt = issuedAt.plus(properties.refreshTokenExpiration());
+        Instant expiresAt = issuedAt.plus(
+                properties.refreshTokenExpiration()
+        );
 
         return Jwts.builder()
                 .issuer(properties.issuer())
                 .subject(memberId.toString())
-                .claim(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE)
+                .claim(
+                        TOKEN_TYPE_CLAIM,
+                        TokenType.REFRESH.name()
+                )
                 .issuedAt(Date.from(issuedAt))
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public AuthenticatedMember getAuthenticatedMember(String accessToken) {
+    public AuthenticatedMember getAuthenticatedMember(
+            String accessToken
+    ) {
         Claims claims = parseClaims(accessToken);
-        validateTokenType(claims, ACCESS_TOKEN_TYPE);
 
-        Long memberId = parseMemberId(claims.getSubject());
-        String role = claims.get(ROLE_CLAIM, String.class);
+        validateTokenType(
+                claims,
+                TokenType.ACCESS
+        );
+
+        Long memberId = parseMemberId(claims);
+        String role = claims.get(
+                ROLE_CLAIM,
+                String.class
+        );
 
         if (role == null || role.isBlank()) {
-            throw new JwtException("Access Token에 권한 정보가 없습니다.");
+            throw new JwtException(
+                    "Access Token에 권한 정보가 없습니다."
+            );
         }
 
-        return new AuthenticatedMember(memberId, role);
+        return new AuthenticatedMember(
+                memberId,
+                role
+        );
     }
 
-    public Long getMemberIdFromRefreshToken(String refreshToken) {
+    public Long getMemberIdFromRefreshToken(
+            String refreshToken
+    ) {
         Claims claims = parseClaims(refreshToken);
-        validateTokenType(claims, REFRESH_TOKEN_TYPE);
 
-        return parseMemberId(claims.getSubject());
+        validateTokenType(
+                claims,
+                TokenType.REFRESH
+        );
+
+        return parseMemberId(claims);
     }
 
     private Claims parseClaims(String token) {
+        if (token == null || token.isBlank()) {
+            throw new JwtException(
+                    "JWT가 비어 있습니다."
+            );
+        }
+
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .requireIssuer(properties.issuer())
@@ -90,38 +137,72 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    private void validateTokenType(Claims claims, String expectedType) {
-        String actualType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+    private void validateTokenType(
+            Claims claims,
+            TokenType expectedType
+    ) {
+        String actualType = claims.get(
+                TOKEN_TYPE_CLAIM,
+                String.class
+        );
 
-        if (!expectedType.equals(actualType)) {
-            throw new JwtException("유효하지 않은 JWT 토큰 종류입니다.");
+        if (!expectedType.name().equals(actualType)) {
+            throw new JwtException(
+                    "JWT 종류가 올바르지 않습니다."
+            );
         }
     }
 
-    private Long parseMemberId(String subject) {
+    private Long parseMemberId(Claims claims) {
+        String subject = claims.getSubject();
+
         if (subject == null || subject.isBlank()) {
-            throw new JwtException("JWT subject가 존재하지 않습니다.");
+            throw new JwtException(
+                    "JWT에 회원 식별자가 없습니다."
+            );
         }
 
         try {
             return Long.valueOf(subject);
         } catch (NumberFormatException exception) {
             throw new JwtException(
-                    "JWT subject 형식이 올바르지 않습니다.",
+                    "JWT 회원 식별자 형식이 올바르지 않습니다.",
                     exception
             );
         }
     }
 
-    private SecretKey createSecretKey(String base64Secret) {
+    private void validateMemberId(Long memberId) {
+        Objects.requireNonNull(
+                memberId,
+                "회원 ID는 null일 수 없습니다."
+        );
+
+        if (memberId <= 0) {
+            throw new IllegalArgumentException(
+                    "회원 ID는 양수여야 합니다."
+            );
+        }
+    }
+
+    private SecretKey createSecretKey(
+            String base64Secret
+    ) {
         try {
-            byte[] keyBytes = Decoders.BASE64.decode(base64Secret);
+            byte[] keyBytes =
+                    Decoders.BASE64.decode(base64Secret);
+
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (RuntimeException exception) {
             throw new IllegalArgumentException(
-                    "JWT secret은 충분한 길이의 Base64 인코딩 키여야 합니다.",
+                    "JWT 비밀 키는 충분한 길이의 Base64 문자열이어야 합니다.",
                     exception
             );
         }
+    }
+
+    private enum TokenType {
+        ACCESS,
+        REFRESH
     }
 }

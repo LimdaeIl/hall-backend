@@ -1,5 +1,7 @@
 package com.hall.backend.auth.infrastructure.security;
 
+import com.hall.backend.auth.exception.AuthErrorCode;
+import com.hall.backend.common.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,8 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAccessDeniedHandler implements AccessDeniedHandler {
+public class JwtAccessDeniedHandler
+        implements AccessDeniedHandler {
 
     private final JsonMapper jsonMapper;
 
@@ -22,16 +25,30 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(
             HttpServletRequest request,
             HttpServletResponse response,
-            AccessDeniedException accessDeniedException
+            AccessDeniedException exception
     ) throws IOException {
+        AuthErrorCode errorCode =
+                AuthErrorCode.ACCESS_DENIED;
 
-        SecurityErrorResponse errorResponse =
-                SecurityErrorResponse.forbidden(request.getRequestURI());
+        ErrorResponse errorResponse =
+                ErrorResponse.of(
+                        errorCode,
+                        request
+                );
 
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(
+                errorCode.status().value()
+        );
+        response.setCharacterEncoding(
+                StandardCharsets.UTF_8.name()
+        );
+        response.setContentType(
+                MediaType.APPLICATION_JSON_VALUE
+        );
 
-        jsonMapper.writeValue(response.getWriter(), errorResponse);
+        jsonMapper.writeValue(
+                response.getWriter(),
+                errorResponse
+        );
     }
 }
