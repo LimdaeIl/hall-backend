@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+
+  <!-- WARN 이상 에러/경고 전용 로그 -->
+  <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+
+    <!-- WARN, ERROR 저장 -->
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+
+    <file>${ERROR_FILE}</file>
+
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${ERROR_FILE}.%d{yyyy-MM-dd, ${logback.timezone:-Asia/Seoul}}.%i.gz</fileNamePattern>
+      <maxFileSize>100MB</maxFileSize>
+      <maxHistory>10</maxHistory>
+      <totalSizeCap>5GB</totalSizeCap>
+      <cleanHistoryOnStart>false</cleanHistoryOnStart>
+    </rollingPolicy>
+
+  </appender>
+
+</included>

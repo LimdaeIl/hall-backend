@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <!-- Spring Boot 기본 Logback 설정: %clr, %wEx, PID 등 지원 -->
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+  <!-- 로그 파일 경로 -->
+  <property name="LOG_PATH" value="./logs"/>
+
+  <!-- 운영 파일 로그 경로 -->
+  <property name="INFO_FILE" value="${LOG_PATH}/spring.log"/>
+  <property name="ERROR_FILE" value="${LOG_PATH}/spring_error.log"/>
+
+  <!-- local 콘솔 로그 패턴: 클래스/메서드/라인 표시 -->
+  <property name="LOCAL_LOG_PATTERN"
+    value="[%d{yyyy-MM-dd HH:mm:ss, ${logback.timezone:-Asia/Seoul}}:%-3relative] %clr(%-5level) %clr(${PID:-}){magenta} %clr(---){faint} [%thread{10}, %X{traceId:-}, %X{spanId:-}] %boldWhite([%C.%M:%yellow(%L)]) : %cyan(%logger{20}) : %msg%n%wEx"/>
+
+  <!-- prod 콘솔/파일 로그 패턴: caller 정보 제거 -->
+  <property name="PROD_LOG_PATTERN"
+    value="[%d{yyyy-MM-dd HH:mm:ss.SSS, ${logback.timezone:-Asia/Seoul}}] %-5level ${PID:-} --- [%thread, trace:%X{traceId:-}, span:%X{spanId:-}] %logger{36} : %msg%n%wEx"/>
+
+  <!-- local 콘솔 -->
+  <springProfile name="local | dev">
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>${LOCAL_LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+    </appender>
+
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+  </springProfile>
+
+  <!-- prod 콘솔 + 파일 -->
+  <springProfile name="prod">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>${PROD_LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+    </appender>
+
+    <include resource="logback/info-file-appender.xml"/>
+    <include resource="logback/error-file-appender.xml"/>
+
+    <logger name="org.hibernate.SQL" level="WARN"/>
+    <logger name="org.hibernate.orm.jdbc.bind" level="WARN"/>
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="INFO_LOG"/>
+      <appender-ref ref="ERROR_LOG"/>
+    </root>
+  </springProfile>
+
+</configuration>
