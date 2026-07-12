@@ -36,15 +36,11 @@ public class CorsConfig {
         );
 
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(
-                List.of(HttpHeaders.AUTHORIZATION)
-        );
+        configuration.setExposedHeaders(List.of(HttpHeaders.AUTHORIZATION));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
         return source;

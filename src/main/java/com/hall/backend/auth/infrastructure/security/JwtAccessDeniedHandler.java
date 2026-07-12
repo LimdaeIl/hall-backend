@@ -16,8 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAccessDeniedHandler
-        implements AccessDeniedHandler {
+public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 
     private final JsonMapper jsonMapper;
 
@@ -27,28 +26,11 @@ public class JwtAccessDeniedHandler
             HttpServletResponse response,
             AccessDeniedException exception
     ) throws IOException {
-        AuthErrorCode errorCode =
-                AuthErrorCode.ACCESS_DENIED;
-
-        ErrorResponse errorResponse =
-                ErrorResponse.of(
-                        errorCode,
-                        request
-                );
-
-        response.setStatus(
-                errorCode.status().value()
-        );
-        response.setCharacterEncoding(
-                StandardCharsets.UTF_8.name()
-        );
-        response.setContentType(
-                MediaType.APPLICATION_JSON_VALUE
-        );
-
-        jsonMapper.writeValue(
-                response.getWriter(),
-                errorResponse
-        );
+        AuthErrorCode errorCode = AuthErrorCode.ACCESS_DENIED;
+        ErrorResponse errorResponse = ErrorResponse.of(errorCode, request);
+        response.setStatus(errorCode.status().value());
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        jsonMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

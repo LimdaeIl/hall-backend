@@ -13,7 +13,7 @@ public final class SecurityUtils {
     private SecurityUtils() {
     }
 
-    public static AuthenticatedMember getAuthenticatedMember() {
+    public static MemberPrincipal getAuthenticatedMember() {
         return findAuthenticatedMember()
                 .orElseThrow(() ->
                         new AuthException(
@@ -22,7 +22,7 @@ public final class SecurityUtils {
                 );
     }
 
-    public static Optional<AuthenticatedMember> findAuthenticatedMember() {
+    public static Optional<MemberPrincipal> findAuthenticatedMember() {
         Authentication authentication =
                 SecurityContextHolder
                         .getContext()
@@ -34,11 +34,11 @@ public final class SecurityUtils {
 
         Object principal = authentication.getPrincipal();
 
-        if (!(principal instanceof AuthenticatedMember authenticatedMember)) {
+        if (!(principal instanceof MemberPrincipal memberPrincipal)) {
             return Optional.empty();
         }
 
-        return Optional.of(authenticatedMember);
+        return Optional.of(memberPrincipal);
     }
 
     public static Long getCurrentMemberId() {
