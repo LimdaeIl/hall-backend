@@ -1,6 +1,6 @@
 package com.hall.backend.common.persistence.auditor;
 
-import com.hall.backend.auth.infrastructure.security.AuthenticatedMember;
+import com.hall.backend.auth.infrastructure.security.MemberPrincipal;
 import java.util.Optional;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
@@ -22,8 +22,8 @@ public class AuditorAwareImpl implements AuditorAware<Long> {
 
         Object principal = authentication.getPrincipal();
 
-        if (principal instanceof AuthenticatedMember authenticatedMember) {
-            return Optional.of(authenticatedMember.memberId());
+        if (principal instanceof MemberPrincipal memberPrincipal) {
+            return Optional.of(memberPrincipal.memberId());
         }
 
         return Optional.of(SYSTEM);

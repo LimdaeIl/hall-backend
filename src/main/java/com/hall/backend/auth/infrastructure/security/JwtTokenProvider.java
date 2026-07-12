@@ -1,17 +1,20 @@
 package com.hall.backend.auth.infrastructure.security;
 
+import com.hall.backend.auth.exception.AuthErrorCode;
+import com.hall.backend.auth.exception.AuthException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Objects;
+import java.util.UUID;
+import javax.crypto.SecretKey;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenProvider {
@@ -19,190 +22,182 @@ public class JwtTokenProvider {
     private static final String ROLE_CLAIM = "role";
     private static final String TOKEN_TYPE_CLAIM = "tokenType";
 
-    private final JwtProperties properties;
+    private static final String ACCESS_TOKEN = "access";
+    private static final String REFRESH_TOKEN = "refresh";
+
     private final SecretKey secretKey;
+    private final JwtProperties jwtProperties;
     private final Clock clock;
 
-    public JwtTokenProvider(JwtProperties properties) {
-        this.properties = properties;
-        this.secretKey = createSecretKey(properties.base64Secret());
-        this.clock = Clock.systemUTC();
+    public JwtTokenProvider(JwtProperties jwtProperties, Clock clock) {
+        this.jwtProperties = jwtProperties;
+        this.clock = clock;
+        this.secretKey = Keys.hmacShaKeyFor(
+                jwtProperties.base64Secret().getBytes(StandardCharsets.UTF_8)
+        );
     }
 
-    public String createAccessToken(
-            Long memberId,
-            String role
-    ) {
-        validateMemberId(memberId);
-
-        if (role == null || role.isBlank()) {
-            throw new IllegalArgumentException(
-                    "회원 권한은 비어 있을 수 없습니다."
-            );
-        }
-
-        Instant issuedAt = clock.instant();
-        Instant expiresAt = issuedAt.plus(
-                properties.accessTokenExpiration()
-        );
-
-        return Jwts.builder()
-                .issuer(properties.issuer())
-                .subject(memberId.toString())
-                .claim(ROLE_CLAIM, role)
-                .claim(
-                        TOKEN_TYPE_CLAIM,
-                        TokenType.ACCESS.name()
-                )
-                .issuedAt(Date.from(issuedAt))
-                .expiration(Date.from(expiresAt))
-                .signWith(secretKey)
-                .compact();
+    public String createAccessToken(Long memberId, String role) {
+        return createToken(memberId, ACCESS_TOKEN, role, jwtProperties.accessTokenExpiration());
     }
 
     public String createRefreshToken(Long memberId) {
-        validateMemberId(memberId);
+        return createToken(memberId, REFRESH_TOKEN, null, jwtProperties.refreshTokenExpiration());
+    }
 
-        Instant issuedAt = clock.instant();
-        Instant expiresAt = issuedAt.plus(
-                properties.refreshTokenExpiration()
+    public void validateAccessToken(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_ACCESS_TOKEN,
+                AuthErrorCode.INVALID_ACCESS_TOKEN
         );
 
-        return Jwts.builder()
-                .issuer(properties.issuer())
-                .subject(memberId.toString())
-                .claim(
-                        TOKEN_TYPE_CLAIM,
-                        TokenType.REFRESH.name()
-                )
-                .issuedAt(Date.from(issuedAt))
-                .expiration(Date.from(expiresAt))
+        validateTokenType(claims, ACCESS_TOKEN);
+    }
+
+    public void validateRefreshToken(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_REFRESH_TOKEN,
+                AuthErrorCode.INVALID_REFRESH_TOKEN
+        );
+
+        validateTokenType(claims, REFRESH_TOKEN);
+    }
+
+    public Long getMemberIdFromAccessToken(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_ACCESS_TOKEN,
+                AuthErrorCode.INVALID_ACCESS_TOKEN
+        );
+
+        validateTokenType(claims, ACCESS_TOKEN);
+
+        return Long.valueOf(claims.getSubject());
+    }
+
+    public Long getMemberIdFromRefreshToken(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_REFRESH_TOKEN,
+                AuthErrorCode.INVALID_REFRESH_TOKEN
+        );
+
+        validateTokenType(claims, REFRESH_TOKEN);
+
+        return Long.valueOf(claims.getSubject());
+    }
+
+    public String getRoleFromAccessToken(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_ACCESS_TOKEN,
+                AuthErrorCode.INVALID_ACCESS_TOKEN
+        );
+
+        validateTokenType(claims, ACCESS_TOKEN);
+
+        return claims.get(ROLE_CLAIM, String.class);
+    }
+
+    public long getAccessTokenRemainingMillis(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_ACCESS_TOKEN,
+                AuthErrorCode.INVALID_ACCESS_TOKEN
+        );
+
+        validateTokenType(claims, ACCESS_TOKEN);
+
+        return getRemainingMillis(claims, AuthErrorCode.INVALID_ACCESS_TOKEN);
+    }
+
+    public long getRefreshTokenRemainingMillis(String token) {
+        Claims claims = parseClaims(
+                token,
+                AuthErrorCode.EXPIRED_REFRESH_TOKEN,
+                AuthErrorCode.INVALID_REFRESH_TOKEN
+        );
+
+        validateTokenType(claims, REFRESH_TOKEN);
+
+        return getRemainingMillis(claims, AuthErrorCode.INVALID_REFRESH_TOKEN);
+    }
+
+    private long getRemainingMillis(Claims claims, AuthErrorCode invalidErrorCode) {
+        Date expiration = claims.getExpiration();
+
+        if (expiration == null) {
+            throw new AuthException(invalidErrorCode);
+        }
+
+        long remainingMillis = expiration.getTime() - clock.millis();
+
+        return Math.max(remainingMillis, 0);
+    }
+
+    public long getAccessTokenRemainingSeconds(String token) {
+        return getAccessTokenRemainingMillis(token) / 1000;
+    }
+
+    public long getRefreshTokenRemainingSeconds(String token) {
+        return getRefreshTokenRemainingMillis(token) / 1000;
+    }
+
+    public long getRefreshTokenExpirationMillis() {
+        return jwtProperties.refreshTokenExpiration().toMillis();
+    }
+
+    private String createToken(
+            Long memberId,
+            String tokenType,
+            String role,
+            Duration expirationDuration
+    ) {
+        Instant now = clock.instant();
+        Instant expiration = now.plus(expirationDuration);
+
+        var builder = Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(String.valueOf(memberId))
+                .claim(TOKEN_TYPE_CLAIM, tokenType)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration));
+
+        if (role != null && !role.isBlank()) {
+            builder.claim(ROLE_CLAIM, role);
+        }
+
+        return builder
                 .signWith(secretKey)
                 .compact();
     }
 
-    public AuthenticatedMember getAuthenticatedMember(
-            String accessToken
-    ) {
-        Claims claims = parseClaims(accessToken);
-
-        validateTokenType(
-                claims,
-                TokenType.ACCESS
-        );
-
-        Long memberId = parseMemberId(claims);
-        String role = claims.get(
-                ROLE_CLAIM,
-                String.class
-        );
-
-        if (role == null || role.isBlank()) {
-            throw new JwtException(
-                    "Access Token에 권한 정보가 없습니다."
-            );
-        }
-
-        return new AuthenticatedMember(
-                memberId,
-                role
-        );
-    }
-
-    public Long getMemberIdFromRefreshToken(
-            String refreshToken
-    ) {
-        Claims claims = parseClaims(refreshToken);
-
-        validateTokenType(
-                claims,
-                TokenType.REFRESH
-        );
-
-        return parseMemberId(claims);
-    }
-
-    private Claims parseClaims(String token) {
-        if (token == null || token.isBlank()) {
-            throw new JwtException(
-                    "JWT가 비어 있습니다."
-            );
-        }
-
-        return Jwts.parser()
-                .verifyWith(secretKey)
-                .requireIssuer(properties.issuer())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
-    }
-
-    private void validateTokenType(
-            Claims claims,
-            TokenType expectedType
-    ) {
-        String actualType = claims.get(
-                TOKEN_TYPE_CLAIM,
-                String.class
-        );
-
-        if (!expectedType.name().equals(actualType)) {
-            throw new JwtException(
-                    "JWT 종류가 올바르지 않습니다."
-            );
-        }
-    }
-
-    private Long parseMemberId(Claims claims) {
-        String subject = claims.getSubject();
-
-        if (subject == null || subject.isBlank()) {
-            throw new JwtException(
-                    "JWT에 회원 식별자가 없습니다."
-            );
-        }
-
-        try {
-            return Long.valueOf(subject);
-        } catch (NumberFormatException exception) {
-            throw new JwtException(
-                    "JWT 회원 식별자 형식이 올바르지 않습니다.",
-                    exception
-            );
-        }
-    }
-
-    private void validateMemberId(Long memberId) {
-        Objects.requireNonNull(
-                memberId,
-                "회원 ID는 null일 수 없습니다."
-        );
-
-        if (memberId <= 0) {
-            throw new IllegalArgumentException(
-                    "회원 ID는 양수여야 합니다."
-            );
-        }
-    }
-
-    private SecretKey createSecretKey(
-            String base64Secret
+    private Claims parseClaims(
+            String token,
+            AuthErrorCode expiredErrorCode,
+            AuthErrorCode invalidErrorCode
     ) {
         try {
-            byte[] keyBytes =
-                    Decoders.BASE64.decode(base64Secret);
-
-            return Keys.hmacShaKeyFor(keyBytes);
-        } catch (RuntimeException exception) {
-            throw new IllegalArgumentException(
-                    "JWT 비밀 키는 충분한 길이의 Base64 문자열이어야 합니다.",
-                    exception
-            );
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            throw new AuthException(expiredErrorCode);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new AuthException(invalidErrorCode);
         }
     }
 
-    private enum TokenType {
-        ACCESS,
-        REFRESH
+    private void validateTokenType(Claims claims, String expectedTokenType) {
+        String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+
+        if (!expectedTokenType.equals(tokenType)) {
+            throw new AuthException(AuthErrorCode.INVALID_TOKEN_TYPE);
+        }
     }
 }
+
