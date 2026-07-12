@@ -3,6 +3,7 @@ package com.hall.backend.auth.presentation;
 import com.hall.backend.auth.application.RefreshTokenCookieProvider;
 import com.hall.backend.auth.application.ReissueTokenService;
 import com.hall.backend.auth.application.SignInService;
+import com.hall.backend.auth.application.SignOutService;
 import com.hall.backend.auth.presentation.dto.request.SignInRequest;
 import com.hall.backend.auth.presentation.dto.response.ReissueResponse;
 import com.hall.backend.auth.presentation.dto.response.ReissueTokenResult;
@@ -30,6 +31,8 @@ public class AuthController {
     private final RefreshTokenCookieProvider cookieProvider;
 
     private final ReissueTokenService reissueTokenService;
+    private final SignOutService signOutService;
+
 
 
 
@@ -78,6 +81,17 @@ public class AuthController {
                         reissueTokenResult.newRefreshToken()
                 )
         );
+    }
+
+    @PostMapping("/sign-out")
+    public ResponseEntity<Void> signOut(
+            @CookieValue(value = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        signOutService.signOut(refreshToken);
+        cookieProvider.removeRefreshTokenCookie(response);
+
+        return ResponseEntity.noContent().build();
     }
 
 
