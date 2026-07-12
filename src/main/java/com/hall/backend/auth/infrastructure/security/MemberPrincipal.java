@@ -1,6 +1,6 @@
 package com.hall.backend.auth.infrastructure.security;
 
-public record AuthenticatedMember(
+public record MemberPrincipal(
         Long memberId,
         String role
 ) {
