@@ -8,10 +8,7 @@ public class AuthException extends CommonException {
         super(errorCode);
     }
 
-    public AuthException(
-            AuthErrorCode errorCode,
-            Object... arguments
-    ) {
+    public AuthException(AuthErrorCode errorCode, Object... arguments) {
         super(errorCode, arguments);
     }
 
