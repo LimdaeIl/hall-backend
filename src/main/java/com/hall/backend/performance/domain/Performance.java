@@ -110,6 +110,12 @@ public class Performance {
     }
 
     public boolean isReservable(LocalDateTime now) {
+        if (now == null) {
+            throw new IllegalArgumentException(
+                    "현재 시간은 필수입니다."
+            );
+        }
+
         return status == PerformanceStatus.OPEN
                 && !now.isBefore(reservationOpensAt)
                 && now.isBefore(reservationClosesAt);

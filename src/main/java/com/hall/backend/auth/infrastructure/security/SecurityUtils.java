@@ -2,31 +2,23 @@ package com.hall.backend.auth.infrastructure.security;
 
 import com.hall.backend.auth.exception.AuthErrorCode;
 import com.hall.backend.auth.exception.AuthException;
+import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Optional;
-
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SecurityUtils {
-
-    private SecurityUtils() {
-    }
 
     public static MemberPrincipal getAuthenticatedMember() {
         return findAuthenticatedMember()
-                .orElseThrow(() ->
-                        new AuthException(
-                                AuthErrorCode.UNAUTHENTICATED_MEMBER
-                        )
-                );
+                .orElseThrow(() -> new AuthException(AuthErrorCode.UNAUTHENTICATED_MEMBER));
     }
 
     public static Optional<MemberPrincipal> findAuthenticatedMember() {
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!isAuthenticated(authentication)) {
             return Optional.empty();
@@ -50,10 +42,7 @@ public final class SecurityUtils {
     }
 
     public static boolean isAuthenticated() {
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         return isAuthenticated(authentication);
     }
@@ -63,7 +52,6 @@ public final class SecurityUtils {
     ) {
         return authentication != null
                 && authentication.isAuthenticated()
-                && !(authentication
-                instanceof AnonymousAuthenticationToken);
+                && !(authentication instanceof AnonymousAuthenticationToken);
     }
 }
