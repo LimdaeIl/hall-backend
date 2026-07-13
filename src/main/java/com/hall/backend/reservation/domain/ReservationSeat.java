@@ -13,13 +13,25 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "v1_reservation_seats")
+@Table(
+        name = "v1_reservation_seats",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_reservation_performance_seat",
+                        columnNames = {
+                                "reservation_id",
+                                "performance_seat_id"
+                        }
+                )
+        }
+)
 @Entity
 public class ReservationSeat {
 
@@ -35,7 +47,11 @@ public class ReservationSeat {
     @JoinColumn(name = "performance_seat_id", nullable = false)
     private PerformanceSeat performanceSeat;
 
-    @Column(nullable = false, length = 20)
+    @Column(
+            name = "seat_number",
+            nullable = false,
+            length = 20
+    )
     private String seatNumber;
 
     @Enumerated(EnumType.STRING)
@@ -44,4 +60,49 @@ public class ReservationSeat {
 
     @Column(nullable = false)
     private long price;
+
+    private ReservationSeat(
+            Reservation reservation,
+            PerformanceSeat performanceSeat
+    ) {
+        validateReservation(reservation);
+        validatePerformanceSeat(performanceSeat);
+
+        this.reservation = reservation;
+        this.performanceSeat = performanceSeat;
+        this.seatNumber =
+                performanceSeat.getSeat().getSeatNumber();
+        this.grade = performanceSeat.getGrade();
+        this.price = performanceSeat.getPrice();
+    }
+
+    static ReservationSeat create(
+            Reservation reservation,
+            PerformanceSeat performanceSeat
+    ) {
+        return new ReservationSeat(
+                reservation,
+                performanceSeat
+        );
+    }
+
+    private static void validateReservation(
+            Reservation reservation
+    ) {
+        if (reservation == null) {
+            throw new IllegalArgumentException(
+                    "예약은 필수입니다."
+            );
+        }
+    }
+
+    private static void validatePerformanceSeat(
+            PerformanceSeat performanceSeat
+    ) {
+        if (performanceSeat == null) {
+            throw new IllegalArgumentException(
+                    "공연 좌석은 필수입니다."
+            );
+        }
+    }
 }
