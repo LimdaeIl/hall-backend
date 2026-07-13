@@ -15,12 +15,9 @@ public class JWTHashUtil {
     public String sha256(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance(SHA_256);
-
-            return HexFormat.of()
-                    .formatHex(digest.digest(token.getBytes(StandardCharsets.UTF_8)));
-
+            return HexFormat.of().formatHex(digest.digest(token.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            throw new AssertionError("SHA-256 algorithm must be available", e);
+            throw new AssertionError("SHA-256 알고리즘을 사용할 수 있어야 합니다.", e);
         }
     }
 }

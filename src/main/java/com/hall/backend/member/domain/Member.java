@@ -85,8 +85,5 @@ public class Member extends BaseAuditEntity {
         if (phone == null || phone.isEmpty()) {
             throw new MemberException(MemberErrorCode.PHONE_NUMBER_REQUIRED);
         }
-
     }
-
-
 }

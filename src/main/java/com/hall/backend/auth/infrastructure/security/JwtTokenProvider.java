@@ -33,8 +33,7 @@ public class JwtTokenProvider {
         this.jwtProperties = jwtProperties;
         this.clock = clock;
         this.secretKey = Keys.hmacShaKeyFor(
-                jwtProperties.base64Secret().getBytes(StandardCharsets.UTF_8)
-        );
+                jwtProperties.base64Secret().getBytes(StandardCharsets.UTF_8));
     }
 
     public String createAccessToken(Long memberId, String role) {
