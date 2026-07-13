@@ -2,6 +2,8 @@ package com.hall.backend.performance.domain;
 
 import com.hall.backend.concert.domain.Seat;
 import com.hall.backend.concert.domain.SeatGrade;
+import com.hall.backend.performance.exception.PerformanceErrorCode;
+import com.hall.backend.performance.exception.PerformanceException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -74,7 +76,12 @@ public class PerformanceSeat {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    private PerformanceSeat(Performance performance, Seat seat, SeatGrade grade, long price) {
+    private PerformanceSeat(
+            Performance performance,
+            Seat seat,
+            SeatGrade grade,
+            long price
+    ) {
         validatePerformance(performance);
         validateSeat(seat);
         validateGrade(grade);
@@ -87,13 +94,33 @@ public class PerformanceSeat {
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
-    public static PerformanceSeat create(Performance performance, Seat seat, long price) {
-        return new PerformanceSeat(performance, seat, seat.getGrade(), price);
+    public static PerformanceSeat create(
+            Performance performance,
+            Seat seat,
+            long price
+    ) {
+        validateSeat(seat);
+
+        return new PerformanceSeat(
+                performance,
+                seat,
+                seat.getGrade(),
+                price
+        );
     }
 
-    public static PerformanceSeat create(Performance performance, Seat seat, SeatGrade grade,
-            long price) {
-        return new PerformanceSeat(performance, seat, grade, price);
+    public static PerformanceSeat create(
+            Performance performance,
+            Seat seat,
+            SeatGrade grade,
+            long price
+    ) {
+        return new PerformanceSeat(
+                performance,
+                seat,
+                grade,
+                price
+        );
     }
 
     public boolean isAvailable() {
@@ -113,60 +140,92 @@ public class PerformanceSeat {
     }
 
     public void hold() {
-        validateStatus(PerformanceSeatStatus.AVAILABLE, "예약 가능한 좌석만 선점할 수 있습니다.");
+        if (!isAvailable()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_NOT_AVAILABLE
+            );
+        }
+
         this.status = PerformanceSeatStatus.HELD;
     }
 
     public void reserve() {
-        validateStatus(PerformanceSeatStatus.HELD, "선점된 좌석만 예약 확정할 수 있습니다.");
+        if (!isHeld()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_NOT_HELD
+            );
+        }
+
         this.status = PerformanceSeatStatus.RESERVED;
     }
 
     public void release() {
-        validateStatus(PerformanceSeatStatus.HELD, "선점된 좌석만 해제할 수 있습니다.");
+        if (!isHeld()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_NOT_HELD
+            );
+        }
 
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
     public void block() {
-        validateStatus(PerformanceSeatStatus.AVAILABLE, "예약 가능한 좌석만 판매 차단할 수 있습니다.");
+        if (!isAvailable()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_NOT_AVAILABLE
+            );
+        }
 
         this.status = PerformanceSeatStatus.BLOCKED;
     }
 
     public void unblock() {
-        validateStatus(PerformanceSeatStatus.BLOCKED, "차단된 좌석만 판매 가능 상태로 변경할 수 있습니다.");
+        if (!isBlocked()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_NOT_BLOCKED
+            );
+        }
 
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
-    private void validateStatus(PerformanceSeatStatus expected, String message) {
-        if (status != expected) {
-            throw new IllegalStateException(message);
-        }
-    }
-
-    private static void validatePerformance(Performance performance) {
+    private static void validatePerformance(
+            Performance performance
+    ) {
         if (performance == null) {
-            throw new IllegalArgumentException("공연 회차는 필수입니다.");
+            throw new PerformanceException(
+                    PerformanceErrorCode.PERFORMANCE_REQUIRED
+            );
         }
     }
 
-    private static void validateSeat(Seat seat) {
+    private static void validateSeat(
+            Seat seat
+    ) {
         if (seat == null) {
-            throw new IllegalArgumentException("좌석은 필수입니다.");
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_REQUIRED
+            );
         }
     }
 
-    private static void validateGrade(SeatGrade grade) {
+    private static void validateGrade(
+            SeatGrade grade
+    ) {
         if (grade == null) {
-            throw new IllegalArgumentException("공연 좌석 등급은 필수입니다.");
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_GRADE_REQUIRED
+            );
         }
     }
 
-    private static void validatePrice(long price) {
+    private static void validatePrice(
+            long price
+    ) {
         if (price < 0) {
-            throw new IllegalArgumentException("공연 좌석 가격은 0원 이상이어야 합니다.");
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_SEAT_PRICE
+            );
         }
     }
 }
