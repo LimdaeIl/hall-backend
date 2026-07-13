@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional
 @Service
 public class SignOutService {
 
@@ -18,6 +17,7 @@ public class SignOutService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JWTHashUtil jwtHashUtil;
 
+    @Transactional
     public void signOut(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new AuthException(AuthErrorCode.MISSING_REFRESH_TOKEN);
@@ -34,10 +34,5 @@ public class SignOutService {
 
         tokenRepository.deleteByMemberId(memberId);
     }
-
-    public void signOutByMemberId(Long memberId) {
-        tokenRepository.deleteByMemberId(memberId);
-    }
-
 }
 

@@ -26,15 +26,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthController {
 
-
     private final SignInService signInService;
     private final RefreshTokenCookieProvider cookieProvider;
-
     private final ReissueTokenService reissueTokenService;
     private final SignOutService signOutService;
-
-
-
 
     @PostMapping("/sign-in")
     public ResponseEntity<ApiResponse<SignInResponse>> signIn(
@@ -93,8 +88,4 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
-
-
-
-    
 }

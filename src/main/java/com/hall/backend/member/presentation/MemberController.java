@@ -4,10 +4,12 @@ import com.hall.backend.common.response.ApiResponse;
 import com.hall.backend.member.application.SignUpService;
 import com.hall.backend.member.presentation.dto.request.SignUpRequest;
 import com.hall.backend.member.presentation.dto.response.SignUpResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,7 +23,7 @@ public class MemberController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(
-            SignUpRequest request
+            @Valid @RequestBody SignUpRequest request
     ) {
         SignUpResponse response = signUpService.signUp(request);
 
@@ -32,5 +34,4 @@ public class MemberController {
                         response
                 ));
     }
-
 }

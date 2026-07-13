@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional
 @Service
 public class ReissueTokenService {
 
@@ -23,6 +22,7 @@ public class ReissueTokenService {
     private final JWTHashUtil jwtHashUtil;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Transactional
     public ReissueTokenResult reissue(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new AuthException(AuthErrorCode.MISSING_REFRESH_TOKEN);

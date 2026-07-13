@@ -19,7 +19,7 @@ public enum RotateResult {
         return Arrays.stream(values())
                 .filter(result -> result.code == code)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Unknown rotate result code: " + code));
+                .orElseThrow(() -> new IllegalArgumentException("알 수 없는 결과 코드: " + code));
     }
 }
 
