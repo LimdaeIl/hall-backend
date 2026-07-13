@@ -1,5 +1,7 @@
 package com.hall.backend.concert.domain;
 
+import com.hall.backend.concert.exception.ConcertErrorCode;
+import com.hall.backend.concert.exception.ConcertException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -65,27 +67,27 @@ public class Seat {
 
     private static void validateSeatNumber(String seatNumber) {
         if (seatNumber == null || seatNumber.isBlank()) {
-            throw new IllegalArgumentException("좌석 번호는 비어 있을 수 없습니다.");
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_REQUIRED);
         }
 
         if (seatNumber.length() > 20) {
-            throw new IllegalArgumentException("좌석 번호는 20자를 초과할 수 없습니다.");
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_TOO_LONG);
         }
     }
 
     private static void validateGrade(SeatGrade grade) {
         if (grade == null) {
-            throw new IllegalArgumentException("좌석 등급은 필수입니다.");
+            throw new ConcertException(ConcertErrorCode.SEAT_GRADE_REQUIRED);
         }
     }
 
     private static void validatePosition(int rowNumber, int columnNumber) {
         if (rowNumber <= 0) {
-            throw new IllegalArgumentException("좌석 행 번호는 1 이상이어야 합니다.");
+            throw new ConcertException(ConcertErrorCode.SEAT_ROW_NUMBER_INVALID);
         }
 
         if (columnNumber <= 0) {
-            throw new IllegalArgumentException("좌석 열 번호는 1 이상이어야 합니다.");
+            throw new ConcertException(ConcertErrorCode.SEAT_COLUMN_NUMBER_INVALID);
         }
     }
 }
