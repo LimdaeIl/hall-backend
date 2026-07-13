@@ -1,5 +1,7 @@
 package com.hall.backend.concert.domain;
 
+import com.hall.backend.concert.exception.ConcertErrorCode;
+import com.hall.backend.concert.exception.ConcertException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,15 +37,31 @@ public class Concert {
     @Column(nullable = false, length = 30)
     private ConcertStatus status;
 
-    public Concert(
-            String title,
-            String artist,
-            String description
-    ) {
+    private Concert(String title, String artist, String description) {
+        validateTitle(title);
+        validateArtist(artist);
+
         this.title = title;
         this.artist = artist;
         this.description = description;
         this.status = ConcertStatus.PREPARING;
+    }
+
+    private void validateTitle(String title) {
+        if (title == null || title.isBlank()) {
+            throw new ConcertException(ConcertErrorCode.TITLE_CANNOT_BE_NULL_OR_BLANK);
+        }
+    }
+
+    private  void validateArtist(String artist) {
+        if (artist == null || artist.isBlank()) {
+            throw new ConcertException(ConcertErrorCode.ARTIST_CANNOT_BE_NULL_OR_BLANK);
+        }
+    }
+
+
+    public static Concert create(String title, String artist, String description) {
+        return new Concert(title, artist, description);
     }
 
     public void open() {
@@ -53,4 +71,6 @@ public class Concert {
     public void close() {
         this.status = ConcertStatus.CLOSED;
     }
+
+
 }
