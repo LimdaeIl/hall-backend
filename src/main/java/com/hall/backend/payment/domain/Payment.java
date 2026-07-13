@@ -1,5 +1,7 @@
 package com.hall.backend.payment.domain;
 
+import com.hall.backend.payment.exception.PaymentErrorCode;
+import com.hall.backend.payment.exception.PaymentException;
 import com.hall.backend.reservation.domain.Reservation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -28,10 +30,18 @@ public class Payment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "reservation_id", nullable = false)
+    @JoinColumn(
+            name = "reservation_id",
+            nullable = false,
+            unique = true
+    )
     private Reservation reservation;
 
-    @Column(name = "transaction_key", length = 100)
+    @Column(
+            name = "transaction_key",
+            length = 100,
+            unique = true
+    )
     private String transactionKey;
 
     @Column(nullable = false)
@@ -45,16 +55,56 @@ public class Payment {
     @Column(nullable = false, length = 20)
     private PaymentStatus status;
 
+    @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
+
+    private Payment(
+            Reservation reservation,
+            long amount,
+            PaymentMethod method
+    ) {
+        validateReservation(reservation);
+        validateAmount(amount);
+        validateMethod(method);
+
+        this.reservation = reservation;
+        this.amount = amount;
+        this.method = method;
+        this.status = PaymentStatus.PENDING;
+    }
+
+    public static Payment create(
+            Reservation reservation,
+            long amount,
+            PaymentMethod method
+    ) {
+        return new Payment(
+                reservation,
+                amount,
+                method
+        );
+    }
 
     public void approve(
             String transactionKey,
             LocalDateTime paidAt
     ) {
-        if (status != PaymentStatus.PENDING) {
-            throw new IllegalStateException("결제 대기 상태가 아닙니다.");
+        validatePending();
+
+        if (transactionKey == null
+                || transactionKey.isBlank()) {
+            throw new PaymentException(
+                    PaymentErrorCode.TRANSACTION_KEY_REQUIRED
+            );
+        }
+
+        if (paidAt == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAID_AT_REQUIRED
+            );
         }
 
         this.transactionKey = transactionKey;
@@ -63,19 +113,60 @@ public class Payment {
     }
 
     public void fail() {
-        if (status != PaymentStatus.PENDING) {
-            throw new IllegalStateException("결제 대기 상태가 아닙니다.");
-        }
-
+        validatePending();
         this.status = PaymentStatus.FAILED;
     }
 
     public void cancel(LocalDateTime cancelledAt) {
         if (status != PaymentStatus.COMPLETED) {
-            throw new IllegalStateException("완료된 결제만 취소할 수 있습니다.");
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_NOT_COMPLETED
+            );
+        }
+
+        if (cancelledAt == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.CANCELLED_AT_REQUIRED
+            );
         }
 
         this.status = PaymentStatus.CANCELLED;
         this.cancelledAt = cancelledAt;
+    }
+
+    private void validatePending() {
+        if (status != PaymentStatus.PENDING) {
+            throw new PaymentException(
+                    PaymentErrorCode.INVALID_PAYMENT_STATUS
+            );
+        }
+    }
+
+    private static void validateReservation(
+            Reservation reservation
+    ) {
+        if (reservation == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.RESERVATION_REQUIRED
+            );
+        }
+    }
+
+    private static void validateAmount(long amount) {
+        if (amount <= 0) {
+            throw new PaymentException(
+                    PaymentErrorCode.INVALID_PAYMENT_AMOUNT
+            );
+        }
+    }
+
+    private static void validateMethod(
+            PaymentMethod method
+    ) {
+        if (method == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_METHOD_REQUIRED
+            );
+        }
     }
 }

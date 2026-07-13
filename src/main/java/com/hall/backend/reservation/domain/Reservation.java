@@ -123,27 +123,57 @@ public class Reservation {
                 && !now.isBefore(expiredAt);
     }
 
-    public void complete(LocalDateTime now) {
+    public void complete(
+            LocalDateTime now
+    ) {
         validatePendingPayment();
+        validateHasSeats();
 
         if (isExpired(now)) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_EXPIRED);
+            throw new ReservationException(
+                    ReservationErrorCode.RESERVATION_EXPIRED
+            );
         }
+
+        reservationSeats.forEach(
+                ReservationSeat::complete
+        );
 
         this.status = ReservationStatus.COMPLETED;
     }
 
+    private void validateHasSeats() {
+        if (reservationSeats.isEmpty()) {
+            throw new ReservationException(
+                    ReservationErrorCode.RESERVATION_SEAT_REQUIRED
+            );
+        }
+    }
+
     public void cancel() {
         validatePendingPayment();
+
+        reservationSeats.forEach(
+                ReservationSeat::release
+        );
+
         this.status = ReservationStatus.CANCELLED;
     }
 
-    public void expire(LocalDateTime now) {
+    public void expire(
+            LocalDateTime now
+    ) {
         validatePendingPayment();
 
         if (!isExpired(now)) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_EXPIRED);
+            throw new ReservationException(
+                    ReservationErrorCode.RESERVATION_NOT_EXPIRED
+            );
         }
+
+        reservationSeats.forEach(
+                ReservationSeat::release
+        );
 
         this.status = ReservationStatus.EXPIRED;
     }
@@ -205,4 +235,11 @@ public class Reservation {
             throw new ReservationException(ReservationErrorCode.EXPIRED_AT_REQUIRED);
         }
     }
+
+    public boolean isOwnedBy(Long memberId) {
+        return member.getId().equals(memberId);
+    }
+
+
+
 }

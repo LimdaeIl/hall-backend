@@ -86,6 +86,14 @@ public class ReservationSeat {
         );
     }
 
+    void complete() {
+        performanceSeat.reserve();
+    }
+
+    void release() {
+        performanceSeat.release();
+    }
+
     private static void validateReservation(
             Reservation reservation
     ) {

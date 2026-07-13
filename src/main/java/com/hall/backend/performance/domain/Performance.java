@@ -52,41 +52,15 @@ public class Performance {
             LocalDateTime reservationOpensAt,
             LocalDateTime reservationClosesAt
     ) {
-        if (concert == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.CONCERT_REQUIRED
-            );
-        }
-
-        if (startsAt == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.STARTS_AT_REQUIRED
-            );
-        }
-
-        if (reservationOpensAt == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.RESERVATION_OPENS_AT_REQUIRED
-            );
-        }
-
-        if (reservationClosesAt == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.RESERVATION_CLOSES_AT_REQUIRED
-            );
-        }
-
-        if (!reservationOpensAt.isBefore(reservationClosesAt)) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_RESERVATION_PERIOD
-            );
-        }
-
-        if (!reservationClosesAt.isBefore(startsAt)) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.RESERVATION_MUST_CLOSE_BEFORE_START
-            );
-        }
+        validateConcert(concert);
+        validateStartsAt(startsAt);
+        validateReservationOpensAt(reservationOpensAt);
+        validateReservationClosesAt(reservationClosesAt);
+        validateReservationPeriod(
+                startsAt,
+                reservationOpensAt,
+                reservationClosesAt
+        );
 
         this.concert = concert;
         this.startsAt = startsAt;
@@ -109,15 +83,141 @@ public class Performance {
         );
     }
 
-    public boolean isReservable(LocalDateTime now) {
-        if (now == null) {
-            throw new IllegalArgumentException(
-                    "현재 시간은 필수입니다."
-            );
-        }
+    public boolean isReservable(
+            LocalDateTime now
+    ) {
+        validateCurrentTime(now);
 
         return status == PerformanceStatus.OPEN
                 && !now.isBefore(reservationOpensAt)
                 && now.isBefore(reservationClosesAt);
+    }
+
+    public void validateReservable(
+            LocalDateTime now
+    ) {
+        if (!isReservable(now)) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.PERFORMANCE_NOT_RESERVABLE
+            );
+        }
+    }
+
+    private static void validateConcert(
+            Concert concert
+    ) {
+        if (concert == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.CONCERT_REQUIRED
+            );
+        }
+    }
+
+    private static void validateStartsAt(
+            LocalDateTime startsAt
+    ) {
+        if (startsAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.STARTS_AT_REQUIRED
+            );
+        }
+    }
+
+    private static void validateReservationOpensAt(
+            LocalDateTime reservationOpensAt
+    ) {
+        if (reservationOpensAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.RESERVATION_OPENS_AT_REQUIRED
+            );
+        }
+    }
+
+    private static void validateReservationClosesAt(
+            LocalDateTime reservationClosesAt
+    ) {
+        if (reservationClosesAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.RESERVATION_CLOSES_AT_REQUIRED
+            );
+        }
+    }
+
+    private static void validateReservationPeriod(
+            LocalDateTime startsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt
+    ) {
+        if (!reservationOpensAt.isBefore(
+                reservationClosesAt
+        )) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_RESERVATION_PERIOD
+            );
+        }
+
+        if (!reservationClosesAt.isBefore(startsAt)) {
+            throw new PerformanceException(
+                    PerformanceErrorCode
+                            .RESERVATION_MUST_CLOSE_BEFORE_START
+            );
+        }
+    }
+
+    private static void validateCurrentTime(
+            LocalDateTime now
+    ) {
+        if (now == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.CURRENT_TIME_REQUIRED
+            );
+        }
+    }
+
+    public void open() {
+        validateStatus(PerformanceStatus.PREPARING);
+        this.status = PerformanceStatus.OPEN;
+    }
+
+    public void close() {
+        if (status != PerformanceStatus.OPEN
+                && status != PerformanceStatus.SOLD_OUT) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
+            );
+        }
+
+        this.status = PerformanceStatus.CLOSED;
+    }
+
+    public void cancel() {
+        if (status == PerformanceStatus.CANCELLED
+                || status == PerformanceStatus.COMPLETED) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
+            );
+        }
+
+        this.status = PerformanceStatus.CANCELLED;
+    }
+
+    public void complete() {
+        if (status != PerformanceStatus.CLOSED) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
+            );
+        }
+
+        this.status = PerformanceStatus.COMPLETED;
+    }
+
+    private void validateStatus(
+            PerformanceStatus expected
+    ) {
+        if (status != expected) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
+            );
+        }
     }
 }
