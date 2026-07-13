@@ -7,6 +7,7 @@ import jakarta.validation.ConstraintViolationException;
 import java.util.Comparator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -191,6 +192,26 @@ public class GlobalExceptionHandler {
                 .status(CommonErrorCode.INTERNAL_SERVER_ERROR.status())
                 .body(ErrorResponse.of(
                         CommonErrorCode.INTERNAL_SERVER_ERROR,
+                        request
+                ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException exception,
+            HttpServletRequest request
+    ) {
+        log.warn(
+                "데이터 제약조건 위반. method={}, path={}, message={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getMostSpecificCause().getMessage()
+        );
+
+        return ResponseEntity
+                .status(CommonErrorCode.DATA_INTEGRITY_VIOLATION.status())
+                .body(ErrorResponse.of(
+                        CommonErrorCode.DATA_INTEGRITY_VIOLATION,
                         request
                 ));
     }
