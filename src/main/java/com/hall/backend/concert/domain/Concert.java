@@ -73,5 +73,60 @@ public class Concert extends BaseAuditEntity {
         this.status = ConcertStatus.CLOSED;
     }
 
+    public void updateInformation(
+            String title,
+            String artist,
+            String description
+    ) {
+        if (title != null) {
+            validateTitle(title);
+            this.title = title.trim();
+        }
 
+        if (artist != null) {
+            validateArtist(artist);
+            this.artist = artist.trim();
+        }
+
+        if (description != null) {
+            validateDescription(description);
+            this.description = description.trim();
+        }
+    }
+
+    private void validateDescription(String description) {
+        if (description != null && description.length() > 1000) {
+            throw new ConcertException(ConcertErrorCode.DESCRIPTION_TOO_LONG);
+        }
+    }
+
+    public void changeStatus(ConcertStatus newStatus) {
+        if (newStatus == null) {
+            throw new ConcertException(ConcertErrorCode.CONCERT_STATUS_REQUIRED);
+        }
+
+        if (this.status == newStatus) {
+            throw new ConcertException(ConcertErrorCode.CONCERT_STATUS_NOT_CHANGED);
+        }
+
+        validateStatusTransition(newStatus);
+        this.status = newStatus;
+    }
+
+    private void validateStatusTransition(
+            ConcertStatus newStatus
+    ) {
+        boolean validTransition = switch (this.status) {
+            case PREPARING ->
+                    newStatus == ConcertStatus.OPEN || newStatus == ConcertStatus.CANCELLED;
+
+            case OPEN -> newStatus == ConcertStatus.CLOSED || newStatus == ConcertStatus.CANCELLED;
+
+            case CLOSED, CANCELLED -> false;
+        };
+
+        if (!validTransition) {
+            throw new ConcertException(ConcertErrorCode.INVALID_CONCERT_STATUS_TRANSITION);
+        }
+    }
 }
