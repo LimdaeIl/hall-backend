@@ -3,6 +3,7 @@ package com.hall.backend.concert.infrastructure;
 import com.hall.backend.concert.domain.Concert;
 import com.hall.backend.concert.domain.ConcertStatus;
 import java.util.Collection;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,10 @@ public interface ConcertRepository extends JpaRepository<Concert, Long> {
 
     boolean existsByTitle(String title);
 
+    Optional<Concert> findByIdAndStatusIn(
+            Long concertId,
+            Collection<ConcertStatus> statuses
+    );
     @Query(
             value = """
                     SELECT c

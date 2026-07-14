@@ -95,12 +95,8 @@ public class PerformanceSeat {
         return new PerformanceSeat(performance, seat, seat.getGrade(), price);
     }
 
-    public static PerformanceSeat create(
-            Performance performance,
-            Seat seat,
-            SeatGrade grade,
-            long price
-    ) {
+    public static PerformanceSeat create(Performance performance, Seat seat, SeatGrade grade,
+            long price) {
         return new PerformanceSeat(performance, seat, grade, price);
     }
 
