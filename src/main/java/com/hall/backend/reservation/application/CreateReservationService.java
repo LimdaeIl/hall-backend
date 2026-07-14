@@ -54,15 +54,10 @@ public class CreateReservationService {
         validateAllSeatsAvailable(performanceSeats);
 
         String reservationNumber = reservationNumberGenerator.generate();
-
         LocalDateTime expiredAt = now.plusMinutes(RESERVATION_HOLD_MINUTES);
 
-        Reservation reservation = Reservation.create(
-                reservationNumber,
-                member,
-                performance,
-                expiredAt
-        );
+        Reservation reservation = Reservation.create(reservationNumber, member, performance,
+                expiredAt);
 
         for (PerformanceSeat performanceSeat : performanceSeats) {
             performanceSeat.hold();
@@ -70,7 +65,6 @@ public class CreateReservationService {
         }
 
         Reservation savedReservation = reservationRepository.save(reservation);
-
         return CreateReservationResponse.from(savedReservation);
     }
 
@@ -79,9 +73,7 @@ public class CreateReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
     }
 
-    private Performance getPerformance(
-            Long performanceId
-    ) {
+    private Performance getPerformance(Long performanceId) {
         return performanceRepository
                 .findById(performanceId)
                 .orElseThrow(() -> new IllegalArgumentException("공연을 찾을 수 없습니다."));
@@ -93,39 +85,23 @@ public class CreateReservationService {
         }
     }
 
-    private List<Long> validateAndSortSeatIds(
-            List<Long> requestedSeatIds
-    ) {
-        if (requestedSeatIds == null
-                || requestedSeatIds.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "예약할 좌석을 선택해 주세요."
-            );
+    private List<Long> validateAndSortSeatIds(List<Long> requestedSeatIds) {
+        if (requestedSeatIds == null || requestedSeatIds.isEmpty()) {
+            throw new IllegalArgumentException("예약할 좌석을 선택해 주세요.");
         }
 
         if (requestedSeatIds.size() > MAX_SEAT_COUNT) {
-            throw new IllegalArgumentException(
-                    "한 예약당 최대 "
-                            + MAX_SEAT_COUNT
-                            + "개 좌석까지 예약할 수 있습니다."
-            );
+            throw new IllegalArgumentException("한 예약당 최대 " + MAX_SEAT_COUNT + "개 좌석까지 예약할 수 있습니다.");
         }
 
-        if (requestedSeatIds.stream()
-                .anyMatch(id -> id == null)) {
-            throw new IllegalArgumentException(
-                    "좌석 ID는 null일 수 없습니다."
-            );
+        if (requestedSeatIds.stream().anyMatch(id -> id == null)) {
+            throw new IllegalArgumentException("좌석 ID는 null일 수 없습니다.");
         }
 
-        Set<Long> uniqueSeatIds =
-                new HashSet<>(requestedSeatIds);
+        Set<Long> uniqueSeatIds = new HashSet<>(requestedSeatIds);
 
-        if (uniqueSeatIds.size()
-                != requestedSeatIds.size()) {
-            throw new IllegalArgumentException(
-                    "중복된 좌석이 포함되어 있습니다."
-            );
+        if (uniqueSeatIds.size() != requestedSeatIds.size()) {
+            throw new IllegalArgumentException("중복된 좌석이 포함되어 있습니다.");
         }
 
         return requestedSeatIds.stream()
@@ -133,22 +109,15 @@ public class CreateReservationService {
                 .toList();
     }
 
-    private void validateSeatCount(
-            List<Long> requestedSeatIds,
-            List<PerformanceSeat> performanceSeats
-    ) {
-        if (performanceSeats.size()
-                != requestedSeatIds.size()) {
-            throw new IllegalArgumentException(
-                    "존재하지 않는 공연 좌석이 포함되어 있습니다."
-            );
+    private void validateSeatCount(List<Long> requestedSeatIds,
+            List<PerformanceSeat> performanceSeats) {
+        if (performanceSeats.size() != requestedSeatIds.size()) {
+            throw new IllegalArgumentException("존재하지 않는 공연 좌석이 포함되어 있습니다.");
         }
     }
 
-    private void validateSeatsBelongToPerformance(
-            Long performanceId,
-            List<PerformanceSeat> performanceSeats
-    ) {
+    private void validateSeatsBelongToPerformance(Long performanceId,
+            List<PerformanceSeat> performanceSeats) {
         boolean containsOtherPerformance =
                 performanceSeats.stream()
                         .anyMatch(performanceSeat ->
@@ -160,27 +129,16 @@ public class CreateReservationService {
                         );
 
         if (containsOtherPerformance) {
-            throw new IllegalArgumentException(
-                    "동일한 공연의 좌석만 예약할 수 있습니다."
-            );
+            throw new IllegalArgumentException("동일한 공연의 좌석만 예약할 수 있습니다.");
         }
     }
 
-    private void validateAllSeatsAvailable(
-            List<PerformanceSeat> performanceSeats
-    ) {
-        boolean containsUnavailableSeat =
-                performanceSeats.stream()
-                        .anyMatch(
-                                performanceSeat ->
-                                        !performanceSeat
-                                                .isAvailable()
-                        );
+    private void validateAllSeatsAvailable(List<PerformanceSeat> performanceSeats) {
+        boolean containsUnavailableSeat = performanceSeats.stream()
+                .anyMatch(performanceSeat -> !performanceSeat.isAvailable());
 
         if (containsUnavailableSeat) {
-            throw new IllegalStateException(
-                    "이미 예약되었거나 예약할 수 없는 좌석이 포함되어 있습니다."
-            );
+            throw new IllegalStateException("이미 예약되었거나 예약할 수 없는 좌석이 포함되어 있습니다.");
         }
     }
 }

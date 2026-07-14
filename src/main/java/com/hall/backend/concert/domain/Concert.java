@@ -34,7 +34,7 @@ public class Concert {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false)
     private ConcertStatus status;
 
     private Concert(String title, String artist, String description) {
@@ -53,7 +53,7 @@ public class Concert {
         }
     }
 
-    private  void validateArtist(String artist) {
+    private void validateArtist(String artist) {
         if (artist == null || artist.isBlank()) {
             throw new ConcertException(ConcertErrorCode.ARTIST_CANNOT_BE_NULL_OR_BLANK);
         }

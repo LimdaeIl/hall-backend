@@ -6,6 +6,7 @@ import com.hall.backend.concert.presentation.dto.request.CreateSeatRequest;
 import com.hall.backend.concert.presentation.dto.response.CreateSeatResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,11 +27,11 @@ public class SeatAdminController {
             @Valid @RequestBody CreateSeatRequest request
     ) {
         CreateSeatResponse response = createSeatService.create(request);
-        return ResponseEntity.ok(
-                ApiResponse.ok(
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(
                         "콘서트 좌석 생성에 성공했습니다.",
-                        response
-                )
-        );
+                        response)
+                );
     }
 }

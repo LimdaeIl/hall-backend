@@ -34,48 +34,31 @@ public class CreatePerformanceService {
     @Transactional
     public CreatePerformanceResponse create(CreatePerformanceRequest request) {
         Concert concert = concertRepository.findById(request.concertId())
-                .orElseThrow(() ->
-                        new PerformanceException(
-                                PerformanceErrorCode.CONCERT_NOT_FOUND
-                        )
-                );
+                .orElseThrow(
+                        () -> new PerformanceException(PerformanceErrorCode.CONCERT_NOT_FOUND));
 
-        if (performanceRepository.existsByConcertIdAndStartsAt(
-                request.concertId(),
-                request.startsAt()
-        )) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.PERFORMANCE_ALREADY_EXISTS
-            );
+        if (performanceRepository.existsByConcertIdAndStartsAt(request.concertId(),
+                request.startsAt())) {
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_ALREADY_EXISTS);
         }
 
-        Map<SeatGrade, Long> priceByGrade =
-                new EnumMap<>(SeatGrade.class);
-
-        Set<SeatGrade> requestedGrades =
-                new HashSet<>();
+        Map<SeatGrade, Long> priceByGrade = new EnumMap<>(SeatGrade.class);
+        Set<SeatGrade> requestedGrades = new HashSet<>();
 
         request.seatPrices().forEach(seatPrice -> {
             SeatGrade grade = SeatGrade.from(seatPrice.grade());
 
             if (!requestedGrades.add(grade)) {
-                throw new PerformanceException(
-                        PerformanceErrorCode.DUPLICATE_SEAT_GRADE_PRICE
-                );
+                throw new PerformanceException(PerformanceErrorCode.DUPLICATE_SEAT_GRADE_PRICE);
             }
 
-            priceByGrade.put(
-                    grade,
-                    seatPrice.price()
-            );
+            priceByGrade.put(grade, seatPrice.price());
         });
 
         List<Seat> seats = seatRepository.findAll();
 
         if (seats.isEmpty()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_FOUND
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_FOUND);
         }
 
         Set<SeatGrade> requiredGrades = seats.stream()
@@ -83,9 +66,7 @@ public class CreatePerformanceService {
                 .collect(java.util.stream.Collectors.toSet());
 
         if (!priceByGrade.keySet().containsAll(requiredGrades)) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_GRADE_PRICE_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_GRADE_PRICE_REQUIRED);
         }
 
         Performance performance = Performance.create(
@@ -95,8 +76,7 @@ public class CreatePerformanceService {
                 request.reservationClosesAt()
         );
 
-        Performance savedPerformance =
-                performanceRepository.save(performance);
+        Performance savedPerformance = performanceRepository.save(performance);
 
         List<PerformanceSeat> performanceSeats = seats.stream()
                 .map(seat -> PerformanceSeat.create(
@@ -108,9 +88,6 @@ public class CreatePerformanceService {
 
         performanceSeatRepository.saveAll(performanceSeats);
 
-        return CreatePerformanceResponse.of(
-                savedPerformance,
-                performanceSeats.size()
-        );
+        return CreatePerformanceResponse.of(savedPerformance, performanceSeats.size());
     }
 }

@@ -17,7 +17,6 @@ public class CreateConcertService {
 
     private final ConcertRepository concertRepository;
 
-
     @Transactional
     public CreateConcertResponse create(CreateConcertRequest request) {
         Concert concert = Concert.create(request.title(), request.artist(), request.description());

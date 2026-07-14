@@ -17,9 +17,11 @@ public enum ReservationErrorCode implements ErrorCode {
     MEMBER_REQUIRED(HttpStatus.BAD_REQUEST, "회원은 필수입니다."),
     PERFORMANCE_REQUIRED(HttpStatus.BAD_REQUEST, "공연은 필수입니다."),
     EXPIRED_AT_REQUIRED(HttpStatus.BAD_REQUEST, "만료 시간은 필수입니다."),
-    RESERVATION_SEAT_REQUIRED(HttpStatus.BAD_REQUEST, "예약 좌석은 한 개 이상 필요합니다."), RESERVATION_NOT_FOUND(
-            HttpStatus.NOT_FOUND, "예약을 찾을 수 없습니다."
-    );
+    RESERVATION_SEAT_REQUIRED(HttpStatus.BAD_REQUEST, "예약 좌석은 한 개 이상 필요합니다."),
+    RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "예약을 찾을 수 없습니다."),
+    RESERVATION_REQUIRED(HttpStatus.BAD_REQUEST, "예약은 필수입니다.");
+
+
     private final HttpStatus status;
     private final String message;
 

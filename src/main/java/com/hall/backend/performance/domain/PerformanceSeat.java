@@ -76,12 +76,7 @@ public class PerformanceSeat {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    private PerformanceSeat(
-            Performance performance,
-            Seat seat,
-            SeatGrade grade,
-            long price
-    ) {
+    private PerformanceSeat(Performance performance, Seat seat, SeatGrade grade, long price) {
         validatePerformance(performance);
         validateSeat(seat);
         validateGrade(grade);
@@ -94,19 +89,10 @@ public class PerformanceSeat {
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
-    public static PerformanceSeat create(
-            Performance performance,
-            Seat seat,
-            long price
-    ) {
+    public static PerformanceSeat create(Performance performance, Seat seat, long price) {
         validateSeat(seat);
 
-        return new PerformanceSeat(
-                performance,
-                seat,
-                seat.getGrade(),
-                price
-        );
+        return new PerformanceSeat(performance, seat, seat.getGrade(), price);
     }
 
     public static PerformanceSeat create(
@@ -115,12 +101,7 @@ public class PerformanceSeat {
             SeatGrade grade,
             long price
     ) {
-        return new PerformanceSeat(
-                performance,
-                seat,
-                grade,
-                price
-        );
+        return new PerformanceSeat(performance, seat, grade, price);
     }
 
     public boolean isAvailable() {
@@ -141,9 +122,7 @@ public class PerformanceSeat {
 
     public void hold() {
         if (!isAvailable()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_AVAILABLE
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_AVAILABLE);
         }
 
         this.status = PerformanceSeatStatus.HELD;
@@ -151,9 +130,7 @@ public class PerformanceSeat {
 
     public void reserve() {
         if (!isHeld()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_HELD
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_HELD);
         }
 
         this.status = PerformanceSeatStatus.RESERVED;
@@ -161,9 +138,7 @@ public class PerformanceSeat {
 
     public void release() {
         if (!isHeld()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_HELD
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_HELD);
         }
 
         this.status = PerformanceSeatStatus.AVAILABLE;
@@ -171,9 +146,7 @@ public class PerformanceSeat {
 
     public void block() {
         if (!isAvailable()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_AVAILABLE
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_AVAILABLE);
         }
 
         this.status = PerformanceSeatStatus.BLOCKED;
@@ -181,51 +154,33 @@ public class PerformanceSeat {
 
     public void unblock() {
         if (!isBlocked()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_BLOCKED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_BLOCKED);
         }
 
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
-    private static void validatePerformance(
-            Performance performance
-    ) {
+    private static void validatePerformance(Performance performance) {
         if (performance == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.PERFORMANCE_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_REQUIRED);
         }
     }
 
-    private static void validateSeat(
-            Seat seat
-    ) {
+    private static void validateSeat(Seat seat) {
         if (seat == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_REQUIRED);
         }
     }
 
-    private static void validateGrade(
-            SeatGrade grade
-    ) {
+    private static void validateGrade(SeatGrade grade) {
         if (grade == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_GRADE_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_GRADE_REQUIRED);
         }
     }
 
-    private static void validatePrice(
-            long price
-    ) {
+    private static void validatePrice(long price) {
         if (price < 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_SEAT_PRICE
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_SEAT_PRICE);
         }
     }
 }
