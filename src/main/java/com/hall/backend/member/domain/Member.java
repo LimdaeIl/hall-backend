@@ -91,4 +91,12 @@ public class Member extends BaseAuditEntity {
         this.role = MemberRole.ADMIN;
     }
 
+    public void deactivate() {
+        if (this.status == MemberStatus.DEACTIVATE) {
+            throw new MemberException(MemberErrorCode.ALREADY_DEACTIVATED_MEMBER);
+        }
+
+        this.status = MemberStatus.DEACTIVATE;
+    }
+
 }

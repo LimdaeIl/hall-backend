@@ -1,17 +1,23 @@
 package com.hall.backend.member.presentation;
 
+import com.hall.backend.auth.application.RefreshTokenCookieProvider;
+import com.hall.backend.auth.application.SignOutService;
 import com.hall.backend.auth.infrastructure.security.MemberPrincipal;
 import com.hall.backend.common.response.ApiResponse;
+import com.hall.backend.member.application.DeleteMeService;
 import com.hall.backend.member.application.GetMeService;
 import com.hall.backend.member.application.SignUpService;
 import com.hall.backend.member.presentation.dto.request.SignUpRequest;
 import com.hall.backend.member.presentation.dto.response.GetMeResponse;
 import com.hall.backend.member.presentation.dto.response.SignUpResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +32,11 @@ public class MemberController {
 
     private final SignUpService signUpService;
     private final GetMeService getMeService;
+    private final DeleteMeService deleteMeService;
+
+    private final SignOutService signOutService;
+    private final RefreshTokenCookieProvider cookieProvider;
+
 
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(
@@ -55,5 +66,17 @@ public class MemberController {
         );
     }
 
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMember(
+            @CookieValue(value = "refreshToken", required = false)
+            String refreshToken,
+            HttpServletResponse response,
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        deleteMeService.delete(principal, refreshToken);
+        cookieProvider.removeRefreshTokenCookie(response);
+
+        return ResponseEntity.noContent().build();
+    }
 
 }
