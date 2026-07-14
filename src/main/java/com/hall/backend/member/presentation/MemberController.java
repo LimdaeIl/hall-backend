@@ -1,7 +1,6 @@
 package com.hall.backend.member.presentation;
 
 import com.hall.backend.auth.application.RefreshTokenCookieProvider;
-import com.hall.backend.auth.application.SignOutService;
 import com.hall.backend.auth.infrastructure.security.MemberPrincipal;
 import com.hall.backend.common.response.ApiResponse;
 import com.hall.backend.member.application.DeleteMeService;
@@ -34,7 +33,6 @@ public class MemberController {
     private final GetMeService getMeService;
     private final DeleteMeService deleteMeService;
 
-    private final SignOutService signOutService;
     private final RefreshTokenCookieProvider cookieProvider;
 
 

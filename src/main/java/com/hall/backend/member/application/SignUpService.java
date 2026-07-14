@@ -29,7 +29,7 @@ public class SignUpService {
             throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
         }
 
-        if (memberRepository.findByName(request.name())) {
+        if (memberRepository.existsByName(request.name())) {
             throw new MemberException(MemberErrorCode.DUPLICATE_NAME);
         }
 
@@ -40,9 +40,9 @@ public class SignUpService {
                 request.phone()
         );
 
-        memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
 
-        return SignUpResponse.from(member);
+        return SignUpResponse.from(savedMember);
     }
 
 }
