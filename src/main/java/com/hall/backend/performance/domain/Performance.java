@@ -42,29 +42,57 @@ public class Performance {
     @Column(name = "reservation_closes_at", nullable = false)
     private LocalDateTime reservationClosesAt;
 
+    @Column(name = "max_tickets_per_member", nullable = false)
+    private int maxTicketsPerMember;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private PerformanceStatus status;
 
-    private Performance(Concert concert, LocalDateTime startsAt, LocalDateTime reservationOpensAt,
-            LocalDateTime reservationClosesAt) {
+    private Performance(
+            Concert concert,
+            LocalDateTime startsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt,
+            int maxTicketsPerMember
+    ) {
         validateConcert(concert);
         validateStartsAt(startsAt);
         validateReservationOpensAt(reservationOpensAt);
         validateReservationClosesAt(reservationClosesAt);
-        validateReservationPeriod(startsAt, reservationOpensAt, reservationClosesAt);
+        validateReservationPeriod(
+                startsAt,
+                reservationOpensAt,
+                reservationClosesAt
+        );
+        validateMaxTicketsPerMember(maxTicketsPerMember);
 
         this.concert = concert;
         this.startsAt = startsAt;
         this.reservationOpensAt = reservationOpensAt;
         this.reservationClosesAt = reservationClosesAt;
+        this.maxTicketsPerMember = maxTicketsPerMember;
         this.status = PerformanceStatus.PREPARING;
     }
 
     public static Performance create(Concert concert, LocalDateTime startsAt,
-            LocalDateTime reservationOpensAt, LocalDateTime reservationClosesAt) {
-        return new Performance(concert, startsAt, reservationOpensAt, reservationClosesAt);
+            LocalDateTime reservationOpensAt, LocalDateTime reservationClosesAt,
+            int maxTicketsPerMember) {
+        return new Performance(
+                concert,
+                startsAt,
+                reservationOpensAt,
+                reservationClosesAt,
+                maxTicketsPerMember
+        );
     }
+
+    private static void validateMaxTicketsPerMember(int maxTicketsPerMember) {
+        if (maxTicketsPerMember <= 0) {
+            throw new PerformanceException(PerformanceErrorCode.INVALID_MAX_TICKETS_PER_MEMBER);
+        }
+    }
+
 
     public boolean isReservable(LocalDateTime now) {
         validateCurrentTime(now);
@@ -77,6 +105,12 @@ public class Performance {
     public void validateReservable(LocalDateTime now) {
         if (!isReservable(now)) {
             throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_RESERVABLE);
+        }
+    }
+
+    private static void validatePositiveTicketLimit(int maxTicketsPerMember) {
+        if (maxTicketsPerMember <= 0) {
+            throw new PerformanceException(PerformanceErrorCode.INVALID_MAX_TICKETS_PER_MEMBER);
         }
     }
 
@@ -153,6 +187,29 @@ public class Performance {
     private void validateStatus(PerformanceStatus expected) {
         if (status != expected) {
             throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
+        }
+    }
+
+    public void updateMaxTicketsPerMember(int maxTicketsPerMember) {
+        validatePositiveTicketLimit(maxTicketsPerMember);
+        this.maxTicketsPerMember = maxTicketsPerMember;
+    }
+
+    public void validateReservationLimit(
+            long existingTicketCount,
+            int requestedTicketCount
+    ) {
+        if (requestedTicketCount <= 0) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_TICKET_COUNT
+            );
+        }
+
+        if (existingTicketCount + requestedTicketCount
+                > maxTicketsPerMember) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.RESERVATION_LIMIT_EXCEEDED
+            );
         }
     }
 }

@@ -41,3 +41,8 @@ security:
     issuer: ${JWT_ISSUER}
     accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRE}
     refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRE}
+
+reservation:
+  ticket-limit:
+    default-per-member: 4
+    maximum-per-member: 10

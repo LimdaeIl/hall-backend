@@ -1,5 +1,6 @@
 package com.hall.backend.payment.domain;
 
+import com.hall.backend.common.persistence.entity.BaseAuditEntity;
 import com.hall.backend.payment.exception.PaymentErrorCode;
 import com.hall.backend.payment.exception.PaymentException;
 import com.hall.backend.reservation.domain.Reservation;
@@ -23,7 +24,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "v1_payments")
 @Entity
-public class Payment {
+public class Payment extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

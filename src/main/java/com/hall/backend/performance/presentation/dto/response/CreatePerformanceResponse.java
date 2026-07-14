@@ -9,6 +9,7 @@ public record CreatePerformanceResponse(
         LocalDateTime startsAt,
         LocalDateTime reservationOpensAt,
         LocalDateTime reservationClosesAt,
+        int maxTicketsPerMember,
         String status,
         int createdSeatCount
 ) {
@@ -23,6 +24,7 @@ public record CreatePerformanceResponse(
                 performance.getStartsAt(),
                 performance.getReservationOpensAt(),
                 performance.getReservationClosesAt(),
+                performance.getMaxTicketsPerMember(),
                 performance.getStatus().name(),
                 createdSeatCount
         );

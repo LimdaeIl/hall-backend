@@ -28,7 +28,10 @@ public enum PerformanceErrorCode implements ErrorCode {
     SEAT_NOT_HELD(HttpStatus.CONFLICT, "선점된 좌석이 아닙니다."),
     SEAT_NOT_BLOCKED(HttpStatus.CONFLICT, "차단된 좌석이 아닙니다."),
     PERFORMANCE_NOT_RESERVABLE(HttpStatus.CONFLICT, "현재 예약할 수 없는 공연입니다."),
-    INVALID_PERFORMANCE_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 공연 상태입니다.");
+    INVALID_PERFORMANCE_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 공연 상태입니다."),
+    INVALID_MAX_TICKETS_PER_MEMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 최대 티켓 수입니다."),
+    RESERVATION_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "예약 가능한 티켓 수를 초과했습니다."),
+    INVALID_TICKET_COUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 티켓 수입니다.");
 
     private final HttpStatus status;
     private final String message;

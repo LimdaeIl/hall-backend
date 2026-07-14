@@ -32,62 +32,131 @@ public class CreatePerformanceService {
     private final PerformanceSeatRepository performanceSeatRepository;
 
     @Transactional
-    public CreatePerformanceResponse create(CreatePerformanceRequest request) {
-        Concert concert = concertRepository.findById(request.concertId())
-                .orElseThrow(
-                        () -> new PerformanceException(PerformanceErrorCode.CONCERT_NOT_FOUND));
+    public CreatePerformanceResponse create(
+            CreatePerformanceRequest request
+    ) {
+        Concert concert = concertRepository
+                .findById(request.concertId())
+                .orElseThrow(() ->
+                        new PerformanceException(
+                                PerformanceErrorCode.CONCERT_NOT_FOUND
+                        )
+                );
 
-        if (performanceRepository.existsByConcertIdAndStartsAt(request.concertId(),
-                request.startsAt())) {
-            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_ALREADY_EXISTS);
-        }
+        validateDuplicatedPerformance(request);
 
-        Map<SeatGrade, Long> priceByGrade = new EnumMap<>(SeatGrade.class);
-        Set<SeatGrade> requestedGrades = new HashSet<>();
-
-        request.seatPrices().forEach(seatPrice -> {
-            SeatGrade grade = SeatGrade.from(seatPrice.grade());
-
-            if (!requestedGrades.add(grade)) {
-                throw new PerformanceException(PerformanceErrorCode.DUPLICATE_SEAT_GRADE_PRICE);
-            }
-
-            priceByGrade.put(grade, seatPrice.price());
-        });
+        Map<SeatGrade, Long> priceByGrade =
+                createPriceByGrade(request);
 
         List<Seat> seats = seatRepository.findAll();
 
         if (seats.isEmpty()) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_FOUND);
+            throw new PerformanceException(
+                    PerformanceErrorCode.SEAT_NOT_FOUND
+            );
         }
 
-        Set<SeatGrade> requiredGrades = seats.stream()
-                .map(Seat::getGrade)
-                .collect(java.util.stream.Collectors.toSet());
-
-        if (!priceByGrade.keySet().containsAll(requiredGrades)) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_GRADE_PRICE_REQUIRED);
-        }
+        validateSeatGradePrices(
+                seats,
+                priceByGrade
+        );
 
         Performance performance = Performance.create(
                 concert,
                 request.startsAt(),
                 request.reservationOpensAt(),
-                request.reservationClosesAt()
+                request.reservationClosesAt(),
+                request.maxTicketsPerMember()
         );
 
-        Performance savedPerformance = performanceRepository.save(performance);
+        Performance savedPerformance =
+                performanceRepository.save(performance);
 
-        List<PerformanceSeat> performanceSeats = seats.stream()
-                .map(seat -> PerformanceSeat.create(
-                        savedPerformance,
-                        seat,
-                        priceByGrade.get(seat.getGrade())
-                ))
-                .toList();
+        List<PerformanceSeat> performanceSeats =
+                seats.stream()
+                        .map(seat ->
+                                PerformanceSeat.create(
+                                        savedPerformance,
+                                        seat,
+                                        priceByGrade.get(
+                                                seat.getGrade()
+                                        )
+                                )
+                        )
+                        .toList();
 
         performanceSeatRepository.saveAll(performanceSeats);
 
-        return CreatePerformanceResponse.of(savedPerformance, performanceSeats.size());
+        return CreatePerformanceResponse.of(
+                savedPerformance,
+                performanceSeats.size()
+        );
+    }
+
+    private void validateDuplicatedPerformance(
+            CreatePerformanceRequest request
+    ) {
+        boolean exists =
+                performanceRepository
+                        .existsByConcertIdAndStartsAt(
+                                request.concertId(),
+                                request.startsAt()
+                        );
+
+        if (exists) {
+            throw new PerformanceException(
+                    PerformanceErrorCode
+                            .PERFORMANCE_ALREADY_EXISTS
+            );
+        }
+    }
+
+    private Map<SeatGrade, Long> createPriceByGrade(
+            CreatePerformanceRequest request
+    ) {
+        Map<SeatGrade, Long> priceByGrade =
+                new EnumMap<>(SeatGrade.class);
+
+        Set<SeatGrade> requestedGrades =
+                new HashSet<>();
+
+        request.seatPrices().forEach(seatPrice -> {
+            SeatGrade grade =
+                    SeatGrade.from(seatPrice.grade());
+
+            if (!requestedGrades.add(grade)) {
+                throw new PerformanceException(
+                        PerformanceErrorCode
+                                .DUPLICATE_SEAT_GRADE_PRICE
+                );
+            }
+
+            priceByGrade.put(
+                    grade,
+                    seatPrice.price()
+            );
+        });
+
+        return priceByGrade;
+    }
+
+    private void validateSeatGradePrices(
+            List<Seat> seats,
+            Map<SeatGrade, Long> priceByGrade
+    ) {
+        Set<SeatGrade> requiredGrades =
+                seats.stream()
+                        .map(Seat::getGrade)
+                        .collect(
+                                java.util.stream.Collectors.toSet()
+                        );
+
+        if (!priceByGrade.keySet()
+                .containsAll(requiredGrades)) {
+            throw new PerformanceException(
+                    PerformanceErrorCode
+                            .SEAT_GRADE_PRICE_REQUIRED
+            );
+        }
     }
 }
