@@ -86,4 +86,9 @@ public class Member extends BaseAuditEntity {
             throw new MemberException(MemberErrorCode.PHONE_NUMBER_REQUIRED);
         }
     }
+
+    public void updateRoleByAdmin() {
+        this.role = MemberRole.ADMIN;
+    }
+
 }
