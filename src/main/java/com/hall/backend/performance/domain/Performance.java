@@ -169,8 +169,12 @@ public class Performance {
     }
 
     public void cancel() {
-        if (status == PerformanceStatus.CANCELLED || status == PerformanceStatus.COMPLETED) {
-            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
+        if (status != PerformanceStatus.PREPARING
+                && status != PerformanceStatus.OPEN
+                && status != PerformanceStatus.SOLD_OUT) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
+            );
         }
 
         this.status = PerformanceStatus.CANCELLED;
