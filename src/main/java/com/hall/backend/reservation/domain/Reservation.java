@@ -1,8 +1,8 @@
 package com.hall.backend.reservation.domain;
 
+import com.hall.backend.common.persistence.entity.BaseAuditEntity;
 import com.hall.backend.member.domain.Member;
 import com.hall.backend.performance.domain.Performance;
-import com.hall.backend.performance.domain.PerformanceSeat;
 import com.hall.backend.reservation.exception.ReservationErrorCode;
 import com.hall.backend.reservation.exception.ReservationException;
 import jakarta.persistence.CascadeType;
@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,14 +31,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "v1_reservations")
 @Entity
-public class Reservation {
+public class Reservation extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "reservation_number", nullable = false, unique = true, length = 30)
-    private String reservationNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
@@ -47,121 +45,160 @@ public class Reservation {
     @JoinColumn(name = "performance_id", nullable = false)
     private Performance performance;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ReservationStatus status;
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReservationSeat> reservationSeats = new ArrayList<>();
 
     @Column(name = "total_amount", nullable = false)
     private long totalAmount;
 
-    @Column(name = "expired_at", nullable = false)
-    private LocalDateTime expiredAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    private ReservationStatus status;
 
-    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<ReservationSeat> reservationSeats = new ArrayList<>();
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
 
-    private Reservation(String reservationNumber, Member member, Performance performance,
-            LocalDateTime expiredAt) {
-        validateReservationNumber(reservationNumber);
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @Column(name = "cancelled_at")
+    private LocalDateTime cancelledAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
+    private Reservation(
+            Member member,
+            Performance performance,
+            LocalDateTime expiresAt
+    ) {
         validateMember(member);
         validatePerformance(performance);
-        validateExpiredAt(expiredAt);
+        validateExpiresAt(expiresAt);
 
-        this.reservationNumber = reservationNumber;
         this.member = member;
         this.performance = performance;
+        this.expiresAt = expiresAt;
         this.status = ReservationStatus.PENDING_PAYMENT;
         this.totalAmount = 0L;
-        this.expiredAt = expiredAt;
     }
 
-    public static Reservation create(String reservationNumber, Member member,
-            Performance performance, LocalDateTime expiredAt) {
-        return new Reservation(reservationNumber, member, performance, expiredAt);
+    public static Reservation create(
+            Member member,
+            Performance performance,
+            LocalDateTime expiresAt
+    ) {
+        return new Reservation(
+                member,
+                performance,
+                expiresAt
+        );
     }
 
-    public void addSeat(PerformanceSeat performanceSeat) {
-        validatePendingPayment();
-        validateSamePerformance(performanceSeat);
+    public void addSeat(ReservationSeat reservationSeat) {
+        if (reservationSeat == null) {
+            throw new ReservationException(ReservationErrorCode.SEAT_REQUIRED);
+        }
 
-        ReservationSeat reservationSeat = ReservationSeat.create(this, performanceSeat);
+        if (reservationSeat.getReservation() != this) {
+            throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_SEAT);
+        }
+
+        boolean duplicated = reservationSeats.stream()
+                .anyMatch(existing ->
+                        existing.getPerformanceSeat()
+                                .getId()
+                                .equals(
+                                        reservationSeat
+                                                .getPerformanceSeat()
+                                                .getId()
+                                )
+                );
+
+        if (duplicated) {
+            throw new ReservationException(ReservationErrorCode.DUPLICATE_SEAT);
+        }
 
         reservationSeats.add(reservationSeat);
-        totalAmount += performanceSeat.getPrice();
+
+        try {
+            totalAmount = Math.addExact(
+                    totalAmount,
+                    reservationSeat.getPrice()
+            );
+        } catch (ArithmeticException exception) {
+            throw new ReservationException(ReservationErrorCode.TOTAL_AMOUNT_OVERFLOW);
+        }
+    }
+
+    public void complete(LocalDateTime completedAt) {
+        validatePendingPayment();
+
+        if (completedAt == null) {
+            throw new ReservationException(ReservationErrorCode.COMPLETED_AT_REQUIRED);
+        }
+
+        if (completedAt.isAfter(expiresAt)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_EXPIRED);
+        }
+
+        reservationSeats.forEach(ReservationSeat::complete);
+
+        this.status = ReservationStatus.COMPLETED;
+        this.completedAt = completedAt;
+    }
+
+    public void cancel(LocalDateTime cancelledAt) {
+        if (status != ReservationStatus.PENDING_PAYMENT
+                && status != ReservationStatus.COMPLETED) {
+            throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_STATUS);
+        }
+
+        if (cancelledAt == null) {
+            throw new ReservationException(ReservationErrorCode.CANCELLED_AT_REQUIRED);
+        }
+
+        reservationSeats.forEach(ReservationSeat::cancel);
+
+        this.status = ReservationStatus.CANCELLED;
+        this.cancelledAt = cancelledAt;
+    }
+
+    public void expire(LocalDateTime now) {
+        validatePendingPayment();
+
+        if (now == null) {
+            throw new ReservationException(ReservationErrorCode.CURRENT_TIME_REQUIRED);
+        }
+
+        if (now.isBefore(expiresAt)) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_EXPIRED);
+        }
+
+        reservationSeats.forEach(ReservationSeat::cancel);
+        this.status = ReservationStatus.EXPIRED;
+    }
+
+    public boolean isOwnedBy(Long memberId) {
+        return memberId != null && member.getId().equals(memberId);
+    }
+
+    public boolean isPendingPayment() {
+        return status == ReservationStatus.PENDING_PAYMENT;
+    }
+
+    public boolean isExpired(LocalDateTime now) {
+        return now != null && !now.isBefore(expiresAt);
     }
 
     public List<ReservationSeat> getReservationSeats() {
         return Collections.unmodifiableList(reservationSeats);
     }
 
-    public boolean isExpired(LocalDateTime now) {
-        return status == ReservationStatus.PENDING_PAYMENT && !now.isBefore(expiredAt);
-    }
-
-    public void complete(LocalDateTime now) {
-        validatePendingPayment();
-        validateHasSeats();
-
-        if (isExpired(now)) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_EXPIRED);
-        }
-
-        reservationSeats.forEach(ReservationSeat::complete);
-        this.status = ReservationStatus.COMPLETED;
-    }
-
-    private void validateHasSeats() {
-        if (reservationSeats.isEmpty()) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_SEAT_REQUIRED);
-        }
-    }
-
-    public void cancel() {
-        validatePendingPayment();
-
-        reservationSeats.forEach(ReservationSeat::release);
-        this.status = ReservationStatus.CANCELLED;
-    }
-
-    public void expire(LocalDateTime now) {
-        validatePendingPayment();
-
-        if (!isExpired(now)) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_EXPIRED);
-        }
-        reservationSeats.forEach(ReservationSeat::release);
-        this.status = ReservationStatus.EXPIRED;
-    }
-
     private void validatePendingPayment() {
         if (status != ReservationStatus.PENDING_PAYMENT) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_PENDING_PAYMENT);
-        }
-    }
-
-
-    private void validateSamePerformance(
-            PerformanceSeat performanceSeat
-    ) {
-        if (performanceSeat == null) {
-            throw new ReservationException(ReservationErrorCode.PERFORMANCE_SEAT_REQUIRED);
-        }
-
-        Long reservationPerformanceId = performance.getId();
-        Long seatPerformanceId = performanceSeat.getPerformance().getId();
-
-        if (!reservationPerformanceId.equals(seatPerformanceId)) {
-            throw new ReservationException(ReservationErrorCode.INVALID_PERFORMANCE_SEAT);
-        }
-    }
-
-    private static void validateReservationNumber(String reservationNumber) {
-        if (reservationNumber == null || reservationNumber.isBlank()) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_NUMBER_REQUIRED);
-        }
-
-        if (reservationNumber.length() > 30) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_NUMBER_TOO_LONG);
+            throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_STATUS);
         }
     }
 
@@ -171,21 +208,19 @@ public class Reservation {
         }
     }
 
-    private static void validatePerformance(Performance performance) {
+    private static void validatePerformance(
+            Performance performance
+    ) {
         if (performance == null) {
             throw new ReservationException(ReservationErrorCode.PERFORMANCE_REQUIRED);
         }
     }
 
-    private static void validateExpiredAt(LocalDateTime expiredAt) {
-        if (expiredAt == null) {
-            throw new ReservationException(ReservationErrorCode.EXPIRED_AT_REQUIRED);
+    private static void validateExpiresAt(
+            LocalDateTime expiresAt
+    ) {
+        if (expiresAt == null) {
+            throw new ReservationException(ReservationErrorCode.EXPIRES_AT_REQUIRED);
         }
     }
-
-    public boolean isOwnedBy(Long memberId) {
-        return member.getId().equals(memberId);
-    }
-
-
 }

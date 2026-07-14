@@ -1,6 +1,7 @@
 package com.hall.backend.payment.presentation;
 
 import com.hall.backend.auth.infrastructure.security.MemberPrincipal;
+import com.hall.backend.common.response.ApiResponse;
 import com.hall.backend.payment.application.PaymentService;
 import com.hall.backend.payment.domain.Payment;
 import com.hall.backend.payment.presentation.dto.request.CreatePaymentRequest;
@@ -24,15 +25,25 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/{reservationId}/payments")
-    public ResponseEntity<PaymentResponse> createPayment(
+    public ResponseEntity<ApiResponse<PaymentResponse>>
+    createPayment(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable Long reservationId,
             @Valid @RequestBody CreatePaymentRequest request
     ) {
-        Payment payment = paymentService.pay(principal.memberId(), reservationId, request.method());
+        Payment payment = paymentService.pay(
+                principal.memberId(),
+                reservationId,
+                request.method()
+        );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(PaymentResponse.from(payment));
+                .body(
+                        ApiResponse.created(
+                                "결제: 결제가 완료되었습니다.",
+                                PaymentResponse.from(payment)
+                        )
+                );
     }
 }

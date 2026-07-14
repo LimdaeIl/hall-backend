@@ -13,13 +13,13 @@ public interface PerformanceSeatRepository
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select ps
-            from PerformanceSeat ps
-            join fetch ps.performance
-            join fetch ps.seat
-            where ps.id in :ids
-            order by ps.id
-            """)
+        select ps
+        from PerformanceSeat ps
+        join fetch ps.performance
+        join fetch ps.seat
+        where ps.id in :ids
+        order by ps.id
+        """)
     List<PerformanceSeat> findAllByIdInForUpdate(
             @Param("ids") List<Long> ids
     );

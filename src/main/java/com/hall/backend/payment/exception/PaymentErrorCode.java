@@ -18,7 +18,8 @@ public enum PaymentErrorCode implements ErrorCode {
     PAYMENT_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 결제가 생성된 예약입니다."),
     INVALID_PAYMENT_STATUS(HttpStatus.CONFLICT, "현재 결제 상태에서는 요청을 처리할 수 없습니다."),
     PAYMENT_NOT_COMPLETED(HttpStatus.CONFLICT, "완료된 결제만 취소할 수 있습니다."),
-    UNSUPPORTED_PAYMENT_METHOD(HttpStatus.BAD_REQUEST, "현재 지원하지 않는 결제 수단입니다.");
+    UNSUPPORTED_PAYMENT_METHOD(HttpStatus.BAD_REQUEST, "현재 지원하지 않는 결제 수단입니다."),
+    INVALID_RESERVATION_STATUS(HttpStatus.CONFLICT, "현재 예약 상태에서는 요청을 처리할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

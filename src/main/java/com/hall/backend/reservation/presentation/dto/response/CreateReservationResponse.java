@@ -1,54 +1,35 @@
 package com.hall.backend.reservation.presentation.dto.response;
 
-import com.hall.backend.concert.domain.SeatGrade;
 import com.hall.backend.reservation.domain.Reservation;
-import com.hall.backend.reservation.domain.ReservationSeat;
 import com.hall.backend.reservation.domain.ReservationStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public record CreateReservationResponse(
         Long reservationId,
-        String reservationNumber,
+        Long performanceId,
         ReservationStatus status,
+        List<ReservedSeatResponse> seats,
         long totalAmount,
-        LocalDateTime expiredAt,
-        List<SeatResponse> seats
+        LocalDateTime expiresAt
 ) {
 
     public static CreateReservationResponse from(
             Reservation reservation
     ) {
-        List<SeatResponse> seats =
+        List<ReservedSeatResponse> seats =
                 reservation.getReservationSeats()
                         .stream()
-                        .map(SeatResponse::from)
+                        .map(ReservedSeatResponse::from)
                         .toList();
 
         return new CreateReservationResponse(
                 reservation.getId(),
-                reservation.getReservationNumber(),
+                reservation.getPerformance().getId(),
                 reservation.getStatus(),
+                seats,
                 reservation.getTotalAmount(),
-                reservation.getExpiredAt(),
-                seats
+                reservation.getExpiresAt()
         );
-    }
-
-    public record SeatResponse(
-            String seatNumber,
-            SeatGrade grade,
-            long price
-    ) {
-
-        private static SeatResponse from(
-                ReservationSeat reservationSeat
-        ) {
-            return new SeatResponse(
-                    reservationSeat.getSeatNumber(),
-                    reservationSeat.getGrade(),
-                    reservationSeat.getPrice()
-            );
-        }
     }
 }
