@@ -27,15 +27,12 @@ import lombok.NoArgsConstructor;
                 ),
                 @UniqueConstraint(
                         name = "uk_v1_seats_position",
-                        columnNames = {
-                                "seat_row",
-                                "seat_column"
-                        }
+                        columnNames = {"seat_row", "seat_column"}
                 )
         }
 )
 @Entity
-public class Seat extends BaseAuditEntity  {
+public class Seat extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
