@@ -1,5 +1,6 @@
 package com.hall.backend.concert.domain;
 
+import com.hall.backend.common.persistence.entity.BaseAuditEntity;
 import com.hall.backend.concert.exception.ConcertErrorCode;
 import com.hall.backend.concert.exception.ConcertException;
 import jakarta.persistence.Column;
@@ -18,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "v1_concerts")
 @Entity
-public class Concert {
+public class Concert extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

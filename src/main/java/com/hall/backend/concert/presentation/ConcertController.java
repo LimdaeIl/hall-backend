@@ -1,5 +1,41 @@
 package com.hall.backend.concert.presentation;
 
+import com.hall.backend.common.response.ApiResponse;
+import com.hall.backend.common.response.PageResponse;
+import com.hall.backend.concert.application.GetConcertsService;
+import com.hall.backend.concert.presentation.dto.request.ConcertSortType;
+import com.hall.backend.concert.presentation.dto.response.GetConcertsResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/concerts")
+@RestController
 public class ConcertController {
 
+    private final GetConcertsService getConcertsService;
+
+    @GetMapping
+    public ResponseEntity<
+            ApiResponse<PageResponse<GetConcertsResponse>>> getConcerts(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String artist,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "LATEST") ConcertSortType sort
+    ) {
+        PageResponse<GetConcertsResponse> response =
+                getConcertsService.getConcerts(title, artist, page, size, sort);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(
+                        "콘서트 목록 조회: 콘서트 목록 조회에 성공했습니다.",
+                        response
+                )
+        );
+    }
 }
