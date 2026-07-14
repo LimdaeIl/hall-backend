@@ -1,5 +1,6 @@
 package com.hall.backend.concert.domain;
 
+import com.hall.backend.common.persistence.entity.BaseAuditEntity;
 import com.hall.backend.concert.exception.ConcertErrorCode;
 import com.hall.backend.concert.exception.ConcertException;
 import jakarta.persistence.Column;
@@ -34,7 +35,7 @@ import lombok.NoArgsConstructor;
         }
 )
 @Entity
-public class Seat {
+public class Seat extends BaseAuditEntity  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

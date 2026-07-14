@@ -34,7 +34,6 @@ public class ConcertAdminController {
                         "콘서트: 콘서트 생성에 성공했습니다.",
                         response
                 ));
-
     }
 
 }
