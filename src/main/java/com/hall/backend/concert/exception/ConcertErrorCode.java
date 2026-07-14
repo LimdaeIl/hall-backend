@@ -21,7 +21,16 @@ public enum ConcertErrorCode implements ErrorCode {
     ), SEAT_GRADE_INVALID(HttpStatus.BAD_REQUEST, "유효하지 않은 좌석 등급입니다."),
     SEAT_DUPLICATED(HttpStatus.BAD_REQUEST, "중복된 좌석입니다."),
     DUPLICATE_SEAT_NUMBER(HttpStatus.BAD_REQUEST, "중복된 좌석 번호입니다."),
-    DUPLICATE_SEAT_POSITION(HttpStatus.BAD_REQUEST, "중복된 좌석 위치입니다.");
+    DUPLICATE_SEAT_POSITION(HttpStatus.BAD_REQUEST, "중복된 좌석 위치입니다."),
+    INVALID_PAGE_NUMBER(HttpStatus.BAD_REQUEST, "페이지 번호는 1 이상이어야 합니다."),
+    INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "페이지 크기는 1 이상이어야 합니다."),
+    DESCRIPTION_TOO_LONG(HttpStatus.BAD_REQUEST, "설명은 1000자를 초과할 수 없습니다."),
+    NO_CONCERT_UPDATE_FIELDS(HttpStatus.BAD_REQUEST, "업데이트할 공연 필드가 없습니다."),
+    CONCERT_NOT_FOUND(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."),
+    DUPLICATE_CONCERT_TITLE(HttpStatus.BAD_REQUEST, "이미 존재하는 공연 제목입니다."),
+    INVALID_CONCERT_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 공연 상태 전환입니다."),
+    CONCERT_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "공연 상태는 필수입니다."),
+    CONCERT_STATUS_NOT_CHANGED(HttpStatus.BAD_REQUEST, "공연 상태가 변경되지 않았습니다.");
 
     private final HttpStatus status;
     private final String message;

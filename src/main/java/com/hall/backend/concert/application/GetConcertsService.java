@@ -3,6 +3,8 @@ package com.hall.backend.concert.application;
 import com.hall.backend.common.response.PageResponse;
 import com.hall.backend.concert.domain.Concert;
 import com.hall.backend.concert.domain.ConcertStatus;
+import com.hall.backend.concert.exception.ConcertErrorCode;
+import com.hall.backend.concert.exception.ConcertException;
 import com.hall.backend.concert.infrastructure.ConcertRepository;
 import com.hall.backend.concert.presentation.dto.request.ConcertSortType;
 import com.hall.backend.concert.presentation.dto.response.GetConcertsResponse;
@@ -64,7 +66,7 @@ public class GetConcertsService {
         }
 
         if (page < 0) {
-            throw new IllegalArgumentException("page는 0 이상이어야 합니다.");
+            throw new ConcertException(ConcertErrorCode.INVALID_PAGE_NUMBER);
         }
 
         return page;
@@ -76,7 +78,7 @@ public class GetConcertsService {
         }
 
         if (size <= 0 || size > MAX_PAGE_SIZE) {
-            throw new IllegalArgumentException("size는 1 이상 100 이하여야 합니다.");
+            throw new ConcertException(ConcertErrorCode.INVALID_PAGE_SIZE);
         }
 
         return size;
