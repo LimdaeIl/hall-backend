@@ -40,19 +40,11 @@ public class Seat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(
-            name = "seat_number",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "seat_number", nullable = false, length = 20)
     private String seatNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "grade",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "grade", nullable = false)
     private SeatGrade grade;
 
     @Column(name = "seat_row", nullable = false)
@@ -61,12 +53,7 @@ public class Seat {
     @Column(name = "seat_column", nullable = false)
     private int columnNumber;
 
-    private Seat(
-            String seatNumber,
-            SeatGrade grade,
-            int rowNumber,
-            int columnNumber
-    ) {
+    private Seat(String seatNumber, SeatGrade grade, int rowNumber, int columnNumber) {
         validateSeatNumber(seatNumber);
         validateGrade(grade);
         validatePosition(rowNumber, columnNumber);
@@ -77,60 +64,33 @@ public class Seat {
         this.columnNumber = columnNumber;
     }
 
-    public static Seat create(
-            String seatNumber,
-            SeatGrade grade,
-            int rowNumber,
-            int columnNumber
-    ) {
-        return new Seat(
-                seatNumber,
-                grade,
-                rowNumber,
-                columnNumber
-        );
+    public static Seat create(String seatNumber, SeatGrade grade, int rowNumber, int columnNumber) {
+        return new Seat(seatNumber, grade, rowNumber, columnNumber);
     }
 
-    private static void validateSeatNumber(
-            String seatNumber
-    ) {
+    private static void validateSeatNumber(String seatNumber) {
         if (seatNumber == null || seatNumber.isBlank()) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_NUMBER_REQUIRED
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_REQUIRED);
         }
 
         if (seatNumber.length() > 20) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_NUMBER_TOO_LONG
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_TOO_LONG);
         }
     }
 
-    private static void validateGrade(
-            SeatGrade grade
-    ) {
+    private static void validateGrade(SeatGrade grade) {
         if (grade == null) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_GRADE_REQUIRED
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_GRADE_REQUIRED);
         }
     }
 
-    private static void validatePosition(
-            int rowNumber,
-            int columnNumber
-    ) {
+    private static void validatePosition(int rowNumber, int columnNumber) {
         if (rowNumber <= 0) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_ROW_NUMBER_INVALID
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_ROW_NUMBER_INVALID);
         }
 
         if (columnNumber <= 0) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_COLUMN_NUMBER_INVALID
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_COLUMN_NUMBER_INVALID);
         }
     }
 }

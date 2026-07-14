@@ -8,9 +8,6 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
 
     boolean existsBySeatNumberIn(List<String> seatNumbers);
 
-    boolean existsByRowNumberAndColumnNumber(
-            int rowNumber,
-            int columnNumber
-    );
+    boolean existsByRowNumberAndColumnNumber(int rowNumber, int columnNumber);
 
 }

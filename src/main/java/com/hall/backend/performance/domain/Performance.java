@@ -46,21 +46,13 @@ public class Performance {
     @Column(name = "status", nullable = false, length = 30)
     private PerformanceStatus status;
 
-    private Performance(
-            Concert concert,
-            LocalDateTime startsAt,
-            LocalDateTime reservationOpensAt,
-            LocalDateTime reservationClosesAt
-    ) {
+    private Performance(Concert concert, LocalDateTime startsAt, LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt) {
         validateConcert(concert);
         validateStartsAt(startsAt);
         validateReservationOpensAt(reservationOpensAt);
         validateReservationClosesAt(reservationClosesAt);
-        validateReservationPeriod(
-                startsAt,
-                reservationOpensAt,
-                reservationClosesAt
-        );
+        validateReservationPeriod(startsAt, reservationOpensAt, reservationClosesAt);
 
         this.concert = concert;
         this.startsAt = startsAt;
@@ -69,23 +61,12 @@ public class Performance {
         this.status = PerformanceStatus.PREPARING;
     }
 
-    public static Performance create(
-            Concert concert,
-            LocalDateTime startsAt,
-            LocalDateTime reservationOpensAt,
-            LocalDateTime reservationClosesAt
-    ) {
-        return new Performance(
-                concert,
-                startsAt,
-                reservationOpensAt,
-                reservationClosesAt
-        );
+    public static Performance create(Concert concert, LocalDateTime startsAt,
+            LocalDateTime reservationOpensAt, LocalDateTime reservationClosesAt) {
+        return new Performance(concert, startsAt, reservationOpensAt, reservationClosesAt);
     }
 
-    public boolean isReservable(
-            LocalDateTime now
-    ) {
+    public boolean isReservable(LocalDateTime now) {
         validateCurrentTime(now);
 
         return status == PerformanceStatus.OPEN
@@ -93,84 +74,51 @@ public class Performance {
                 && now.isBefore(reservationClosesAt);
     }
 
-    public void validateReservable(
-            LocalDateTime now
-    ) {
+    public void validateReservable(LocalDateTime now) {
         if (!isReservable(now)) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.PERFORMANCE_NOT_RESERVABLE
-            );
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_RESERVABLE);
         }
     }
 
-    private static void validateConcert(
-            Concert concert
-    ) {
+    private static void validateConcert(Concert concert) {
         if (concert == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.CONCERT_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.CONCERT_REQUIRED);
         }
     }
 
-    private static void validateStartsAt(
-            LocalDateTime startsAt
-    ) {
+    private static void validateStartsAt(LocalDateTime startsAt) {
         if (startsAt == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.STARTS_AT_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.STARTS_AT_REQUIRED);
         }
     }
 
-    private static void validateReservationOpensAt(
-            LocalDateTime reservationOpensAt
-    ) {
+    private static void validateReservationOpensAt(LocalDateTime reservationOpensAt) {
         if (reservationOpensAt == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.RESERVATION_OPENS_AT_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.RESERVATION_OPENS_AT_REQUIRED);
         }
     }
 
-    private static void validateReservationClosesAt(
-            LocalDateTime reservationClosesAt
-    ) {
+    private static void validateReservationClosesAt(LocalDateTime reservationClosesAt) {
         if (reservationClosesAt == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.RESERVATION_CLOSES_AT_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.RESERVATION_CLOSES_AT_REQUIRED);
         }
     }
 
-    private static void validateReservationPeriod(
-            LocalDateTime startsAt,
-            LocalDateTime reservationOpensAt,
-            LocalDateTime reservationClosesAt
-    ) {
-        if (!reservationOpensAt.isBefore(
-                reservationClosesAt
-        )) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_RESERVATION_PERIOD
-            );
+    private static void validateReservationPeriod(LocalDateTime startsAt,
+            LocalDateTime reservationOpensAt, LocalDateTime reservationClosesAt) {
+        if (!reservationOpensAt.isBefore(reservationClosesAt)) {
+            throw new PerformanceException(PerformanceErrorCode.INVALID_RESERVATION_PERIOD);
         }
 
         if (!reservationClosesAt.isBefore(startsAt)) {
             throw new PerformanceException(
-                    PerformanceErrorCode
-                            .RESERVATION_MUST_CLOSE_BEFORE_START
-            );
+                    PerformanceErrorCode.RESERVATION_MUST_CLOSE_BEFORE_START);
         }
     }
 
-    private static void validateCurrentTime(
-            LocalDateTime now
-    ) {
+    private static void validateCurrentTime(LocalDateTime now) {
         if (now == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.CURRENT_TIME_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.CURRENT_TIME_REQUIRED);
         }
     }
 
@@ -180,22 +128,15 @@ public class Performance {
     }
 
     public void close() {
-        if (status != PerformanceStatus.OPEN
-                && status != PerformanceStatus.SOLD_OUT) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
-            );
+        if (status != PerformanceStatus.OPEN && status != PerformanceStatus.SOLD_OUT) {
+            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
-
         this.status = PerformanceStatus.CLOSED;
     }
 
     public void cancel() {
-        if (status == PerformanceStatus.CANCELLED
-                || status == PerformanceStatus.COMPLETED) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
-            );
+        if (status == PerformanceStatus.CANCELLED || status == PerformanceStatus.COMPLETED) {
+            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
 
         this.status = PerformanceStatus.CANCELLED;
@@ -203,21 +144,16 @@ public class Performance {
 
     public void complete() {
         if (status != PerformanceStatus.CLOSED) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
 
         this.status = PerformanceStatus.COMPLETED;
     }
 
-    private void validateStatus(
-            PerformanceStatus expected
-    ) {
+    private void validateStatus(PerformanceStatus expected) {
         if (status != expected) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
     }
 }
+

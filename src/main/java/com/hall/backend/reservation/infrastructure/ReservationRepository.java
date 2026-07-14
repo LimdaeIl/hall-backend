@@ -8,16 +8,11 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ReservationRepository
-        extends JpaRepository<Reservation, Long> {
+public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    boolean existsByReservationNumber(
-            String reservationNumber
-    );
+    boolean existsByReservationNumber(String reservationNumber);
 
-    Optional<Reservation> findByReservationNumber(
-            String reservationNumber
-    );
+    Optional<Reservation> findByReservationNumber(String reservationNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -27,7 +22,5 @@ public interface ReservationRepository
         left join fetch rs.performanceSeat ps
         where r.id = :reservationId
     """)
-    Optional<Reservation> findByIdForPayment(
-            @Param("reservationId") Long reservationId
-    );
+    Optional<Reservation> findByIdForPayment(@Param("reservationId") Long reservationId);
 }

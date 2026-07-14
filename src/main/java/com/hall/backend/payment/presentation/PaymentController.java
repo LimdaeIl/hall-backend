@@ -27,27 +27,12 @@ public class PaymentController {
     public ResponseEntity<PaymentResponse> createPayment(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable Long reservationId,
-            @Valid @RequestBody
-            CreatePaymentRequest request
+            @Valid @RequestBody CreatePaymentRequest request
     ) {
-        Payment payment = paymentService.pay(
-                principal.memberId(),
-                reservationId,
-                request.method()
-        );
+        Payment payment = paymentService.pay(principal.memberId(), reservationId, request.method());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(PaymentResponse.from(payment));
-    }
-
-    private Long getCurrentMemberId() {
-        /*
-         * 기존 ReservationController에서 사용하는
-         * 인증 회원 ID 조회 코드로 교체합니다.
-         */
-        throw new UnsupportedOperationException(
-                "인증 회원 ID 조회 구현이 필요합니다."
-        );
     }
 }

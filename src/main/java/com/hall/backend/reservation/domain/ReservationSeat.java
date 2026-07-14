@@ -2,6 +2,8 @@ package com.hall.backend.reservation.domain;
 
 import com.hall.backend.concert.domain.SeatGrade;
 import com.hall.backend.performance.domain.PerformanceSeat;
+import com.hall.backend.reservation.exception.ReservationErrorCode;
+import com.hall.backend.reservation.exception.ReservationException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -61,29 +63,19 @@ public class ReservationSeat {
     @Column(nullable = false)
     private long price;
 
-    private ReservationSeat(
-            Reservation reservation,
-            PerformanceSeat performanceSeat
-    ) {
+    private ReservationSeat(Reservation reservation, PerformanceSeat performanceSeat) {
         validateReservation(reservation);
         validatePerformanceSeat(performanceSeat);
 
         this.reservation = reservation;
         this.performanceSeat = performanceSeat;
-        this.seatNumber =
-                performanceSeat.getSeat().getSeatNumber();
+        this.seatNumber = performanceSeat.getSeat().getSeatNumber();
         this.grade = performanceSeat.getGrade();
         this.price = performanceSeat.getPrice();
     }
 
-    static ReservationSeat create(
-            Reservation reservation,
-            PerformanceSeat performanceSeat
-    ) {
-        return new ReservationSeat(
-                reservation,
-                performanceSeat
-        );
+    static ReservationSeat create(Reservation reservation, PerformanceSeat performanceSeat) {
+        return new ReservationSeat(reservation, performanceSeat);
     }
 
     void complete() {
@@ -94,23 +86,15 @@ public class ReservationSeat {
         performanceSeat.release();
     }
 
-    private static void validateReservation(
-            Reservation reservation
-    ) {
+    private static void validateReservation(Reservation reservation) {
         if (reservation == null) {
-            throw new IllegalArgumentException(
-                    "예약은 필수입니다."
-            );
+            throw new ReservationException(ReservationErrorCode.RESERVATION_REQUIRED);
         }
     }
 
-    private static void validatePerformanceSeat(
-            PerformanceSeat performanceSeat
-    ) {
+    private static void validatePerformanceSeat(PerformanceSeat performanceSeat) {
         if (performanceSeat == null) {
-            throw new IllegalArgumentException(
-                    "공연 좌석은 필수입니다."
-            );
+            throw new ReservationException(ReservationErrorCode.PERFORMANCE_SEAT_REQUIRED);
         }
     }
 }

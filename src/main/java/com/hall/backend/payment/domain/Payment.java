@@ -30,18 +30,10 @@ public class Payment {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(
-            name = "reservation_id",
-            nullable = false,
-            unique = true
-    )
+    @JoinColumn(name = "reservation_id", nullable = false, unique = true)
     private Reservation reservation;
 
-    @Column(
-            name = "transaction_key",
-            length = 100,
-            unique = true
-    )
+    @Column(name = "transaction_key", length = 100, unique = true)
     private String transactionKey;
 
     @Column(nullable = false)
@@ -61,11 +53,7 @@ public class Payment {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
-    private Payment(
-            Reservation reservation,
-            long amount,
-            PaymentMethod method
-    ) {
+    private Payment(Reservation reservation, long amount, PaymentMethod method) {
         validateReservation(reservation);
         validateAmount(amount);
         validateMethod(method);
@@ -76,35 +64,19 @@ public class Payment {
         this.status = PaymentStatus.PENDING;
     }
 
-    public static Payment create(
-            Reservation reservation,
-            long amount,
-            PaymentMethod method
-    ) {
-        return new Payment(
-                reservation,
-                amount,
-                method
-        );
+    public static Payment create(Reservation reservation, long amount, PaymentMethod method) {
+        return new Payment(reservation, amount, method);
     }
 
-    public void approve(
-            String transactionKey,
-            LocalDateTime paidAt
-    ) {
+    public void approve(String transactionKey, LocalDateTime paidAt) {
         validatePending();
 
-        if (transactionKey == null
-                || transactionKey.isBlank()) {
-            throw new PaymentException(
-                    PaymentErrorCode.TRANSACTION_KEY_REQUIRED
-            );
+        if (transactionKey == null || transactionKey.isBlank()) {
+            throw new PaymentException(PaymentErrorCode.TRANSACTION_KEY_REQUIRED);
         }
 
         if (paidAt == null) {
-            throw new PaymentException(
-                    PaymentErrorCode.PAID_AT_REQUIRED
-            );
+            throw new PaymentException(PaymentErrorCode.PAID_AT_REQUIRED);
         }
 
         this.transactionKey = transactionKey;
@@ -119,15 +91,11 @@ public class Payment {
 
     public void cancel(LocalDateTime cancelledAt) {
         if (status != PaymentStatus.COMPLETED) {
-            throw new PaymentException(
-                    PaymentErrorCode.PAYMENT_NOT_COMPLETED
-            );
+            throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_COMPLETED);
         }
 
         if (cancelledAt == null) {
-            throw new PaymentException(
-                    PaymentErrorCode.CANCELLED_AT_REQUIRED
-            );
+            throw new PaymentException(PaymentErrorCode.CANCELLED_AT_REQUIRED);
         }
 
         this.status = PaymentStatus.CANCELLED;
@@ -136,9 +104,7 @@ public class Payment {
 
     private void validatePending() {
         if (status != PaymentStatus.PENDING) {
-            throw new PaymentException(
-                    PaymentErrorCode.INVALID_PAYMENT_STATUS
-            );
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_STATUS);
         }
     }
 
@@ -146,17 +112,13 @@ public class Payment {
             Reservation reservation
     ) {
         if (reservation == null) {
-            throw new PaymentException(
-                    PaymentErrorCode.RESERVATION_REQUIRED
-            );
+            throw new PaymentException(PaymentErrorCode.RESERVATION_REQUIRED);
         }
     }
 
     private static void validateAmount(long amount) {
         if (amount <= 0) {
-            throw new PaymentException(
-                    PaymentErrorCode.INVALID_PAYMENT_AMOUNT
-            );
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_AMOUNT);
         }
     }
 
@@ -164,9 +126,7 @@ public class Payment {
             PaymentMethod method
     ) {
         if (method == null) {
-            throw new PaymentException(
-                    PaymentErrorCode.PAYMENT_METHOD_REQUIRED
-            );
+            throw new PaymentException(PaymentErrorCode.PAYMENT_METHOD_REQUIRED);
         }
     }
 }
