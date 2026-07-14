@@ -1,13 +1,18 @@
 package com.hall.backend.member.presentation;
 
+import com.hall.backend.auth.infrastructure.security.MemberPrincipal;
 import com.hall.backend.common.response.ApiResponse;
+import com.hall.backend.member.application.GetMeService;
 import com.hall.backend.member.application.SignUpService;
 import com.hall.backend.member.presentation.dto.request.SignUpRequest;
+import com.hall.backend.member.presentation.dto.response.GetMeResponse;
 import com.hall.backend.member.presentation.dto.response.SignUpResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final SignUpService signUpService;
+    private final GetMeService getMeService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<SignUpResponse>> signUp(
@@ -34,4 +40,20 @@ public class MemberController {
                         response
                 ));
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<GetMeResponse>> getMember(
+            @AuthenticationPrincipal MemberPrincipal principal
+    ) {
+        GetMeResponse response = getMeService.me(principal);
+
+        return ResponseEntity.ok(
+                ApiResponse.ok(
+                        "나의 정보 조회: 나의 정보 조회에 성공했습니다.",
+                        response
+                )
+        );
+    }
+
+
 }
