@@ -16,16 +16,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface PerformanceRepository extends JpaRepository<Performance, Long> {
 
-    boolean existsByConcertIdAndStartsAt(
-            Long concertId,
-            LocalDateTime startsAt
-    );
+    boolean existsByConcertIdAndStartsAt(Long concertId, LocalDateTime startsAt);
 
-    boolean existsByConcertIdAndStartsAtAndIdNot(
-            Long concertId,
-            LocalDateTime startsAt,
-            Long performanceId
-    );
+    boolean existsByConcertIdAndStartsAtAndIdNot(Long concertId, LocalDateTime startsAt, Long performanceId);
 
     @Query("""
             SELECT p
