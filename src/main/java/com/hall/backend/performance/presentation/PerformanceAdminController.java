@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @RestController
-public class PerformanceAdminController {
+public class PerformanceAdminController implements PerformanceAdminControllerDocs {
 
     private final CreatePerformanceService
             createPerformanceService;

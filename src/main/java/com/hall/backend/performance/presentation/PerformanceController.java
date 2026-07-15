@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/performances")
 @RestController
-public class PerformanceController {
+public class PerformanceController implements PerformanceControllerDocs {
 
     private final GetAvailablePerformanceSeatsService
             getAvailablePerformanceSeatsService;

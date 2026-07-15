@@ -10,6 +10,7 @@ import com.hall.backend.auth.presentation.dto.response.ReissueTokenResult;
 import com.hall.backend.auth.presentation.dto.response.SignInResponse;
 import com.hall.backend.auth.presentation.dto.response.SignInResult;
 import com.hall.backend.common.response.ApiResponse;
+import com.hall.backend.concert.application.GetAdminConcertsService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @RestController
-public class AuthController {
+public class AuthController implements AuthControllerDocs {
 
     private final SignInService signInService;
     private final RefreshTokenCookieProvider cookieProvider;
