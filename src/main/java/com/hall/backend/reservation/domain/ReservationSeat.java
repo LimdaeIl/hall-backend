@@ -26,15 +26,30 @@ public class ReservationSeat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "reservation_id", nullable = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "reservation_id",
+            nullable = false
+    )
     private Reservation reservation;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "performance_seat_id", nullable = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "performance_seat_id",
+            nullable = false
+    )
     private PerformanceSeat performanceSeat;
 
-    @Column(name = "price", nullable = false)
+    @Column(
+            name = "price",
+            nullable = false
+    )
     private long price;
 
     private ReservationSeat(
@@ -64,9 +79,7 @@ public class ReservationSeat {
     }
 
     public void cancel() {
-        if (performanceSeat.isHeld()) {
-            performanceSeat.release();
-        }
+        performanceSeat.cancelReservation();
     }
 
     private static void validateReservation(
@@ -74,7 +87,8 @@ public class ReservationSeat {
     ) {
         if (reservation == null) {
             throw new ReservationException(
-                    ReservationErrorCode.RESERVATION_REQUIRED
+                    ReservationErrorCode
+                            .RESERVATION_REQUIRED
             );
         }
     }
