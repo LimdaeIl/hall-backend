@@ -19,14 +19,11 @@ public class PerformanceController {
             getAvailablePerformanceSeatsService;
 
     @GetMapping("/{performanceId}/seats")
-    public ResponseEntity<
-            ApiResponse<GetAvailablePerformanceSeatsResponse>
-            > getAvailableSeats(
+    public ResponseEntity<ApiResponse<GetAvailablePerformanceSeatsResponse>> getAvailableSeats(
             @PathVariable Long performanceId
     ) {
-        GetAvailablePerformanceSeatsResponse response =
-                getAvailablePerformanceSeatsService
-                        .getAvailableSeats(performanceId);
+        GetAvailablePerformanceSeatsResponse response = getAvailablePerformanceSeatsService.getAvailableSeats(
+                performanceId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -35,4 +32,6 @@ public class PerformanceController {
                 )
         );
     }
+
+
 }

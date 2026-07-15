@@ -5,6 +5,7 @@ import com.hall.backend.performance.domain.PerformanceStatus;
 import com.hall.backend.performance.exception.PerformanceErrorCode;
 import com.hall.backend.performance.exception.PerformanceException;
 import com.hall.backend.performance.infrastructure.PerformanceRepository;
+import com.hall.backend.performance.infrastructure.PerformanceSeatRepository;
 import com.hall.backend.performance.presentation.dto.request.UpdatePerformanceStatusRequest;
 import com.hall.backend.performance.presentation.dto.response.UpdatePerformanceStatusResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UpdatePerformanceStatusService {
 
     private final PerformanceRepository performanceRepository;
+    private final PerformanceSeatRepository performanceSeatRepository;
 
     @Transactional
     public UpdatePerformanceStatusResponse updateStatus(
@@ -29,6 +31,16 @@ public class UpdatePerformanceStatusService {
                                 PerformanceErrorCode.PERFORMANCE_NOT_FOUND
                         )
                 );
+
+        boolean hasSeats =
+                performanceSeatRepository
+                        .existsByPerformanceId(
+                                performanceId
+                        );
+
+        if (!hasSeats) {
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_SEATS_REQUIRED);
+        }
 
         changeStatus(
                 performance,
@@ -48,11 +60,10 @@ public class UpdatePerformanceStatusService {
             case CANCELLED -> performance.cancel();
             case COMPLETED -> performance.complete();
 
-            case PREPARING, SOLD_OUT ->
-                    throw new PerformanceException(
-                            PerformanceErrorCode
-                                    .INVALID_PERFORMANCE_STATUS
-                    );
+            case PREPARING, SOLD_OUT -> throw new PerformanceException(
+                    PerformanceErrorCode
+                            .INVALID_PERFORMANCE_STATUS
+            );
         }
     }
 }

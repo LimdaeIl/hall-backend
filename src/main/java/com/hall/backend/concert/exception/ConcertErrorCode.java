@@ -30,7 +30,8 @@ public enum ConcertErrorCode implements ErrorCode {
     DUPLICATE_CONCERT_TITLE(HttpStatus.BAD_REQUEST, "이미 존재하는 공연 제목입니다."),
     INVALID_CONCERT_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "유효하지 않은 공연 상태 전환입니다."),
     CONCERT_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "공연 상태는 필수입니다."),
-    CONCERT_STATUS_NOT_CHANGED(HttpStatus.BAD_REQUEST, "공연 상태가 변경되지 않았습니다.");
+    CONCERT_STATUS_NOT_CHANGED(HttpStatus.BAD_REQUEST, "공연 상태가 변경되지 않았습니다."),
+    CONCERT_HAS_RESERVATIONS(HttpStatus.CONFLICT, "예약 이력이 존재하는 콘서트는 삭제할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

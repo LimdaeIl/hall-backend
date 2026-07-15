@@ -1,0 +1,112 @@
+package com.hall.backend.concert.application;
+
+import com.hall.backend.common.response.PageResponse;
+import com.hall.backend.concert.domain.Concert;
+import com.hall.backend.concert.domain.ConcertStatus;
+import com.hall.backend.concert.exception.ConcertErrorCode;
+import com.hall.backend.concert.exception.ConcertException;
+import com.hall.backend.concert.infrastructure.ConcertRepository;
+import com.hall.backend.concert.presentation.dto.request.ConcertSortType;
+import com.hall.backend.concert.presentation.dto.response.GetAdminConcertsResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@RequiredArgsConstructor
+@Service
+public class GetAdminConcertsService {
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
+
+    private final ConcertRepository concertRepository;
+
+    @Transactional(readOnly = true)
+    public PageResponse<GetAdminConcertsResponse> getConcerts(
+            String title,
+            String artist,
+            ConcertStatus status,
+            Integer page,
+            Integer size,
+            ConcertSortType sortType
+    ) {
+        String normalizedTitle =
+                normalizeSearchKeyword(title);
+
+        String normalizedArtist =
+                normalizeSearchKeyword(artist);
+
+        int resolvedPage = resolvePage(page);
+        int resolvedSize = resolveSize(size);
+
+        ConcertSortType resolvedSortType =
+                resolveSortType(sortType);
+
+        PageRequest pageRequest = PageRequest.of(
+                resolvedPage,
+                resolvedSize,
+                resolvedSortType.toSort()
+        );
+
+        Page<Concert> concerts =
+                concertRepository.searchForAdmin(
+                        normalizedTitle,
+                        normalizedArtist,
+                        status,
+                        pageRequest
+                );
+
+        return PageResponse.from(
+                concerts,
+                GetAdminConcertsResponse::from
+        );
+    }
+
+    private String normalizeSearchKeyword(
+            String keyword
+    ) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
+        return keyword.trim();
+    }
+
+    private int resolvePage(Integer page) {
+        if (page == null) {
+            return 0;
+        }
+
+        if (page < 0) {
+            throw new ConcertException(
+                    ConcertErrorCode.INVALID_PAGE_NUMBER
+            );
+        }
+
+        return page;
+    }
+
+    private int resolveSize(Integer size) {
+        if (size == null) {
+            return DEFAULT_PAGE_SIZE;
+        }
+
+        if (size <= 0 || size > MAX_PAGE_SIZE) {
+            throw new ConcertException(
+                    ConcertErrorCode.INVALID_PAGE_SIZE
+            );
+        }
+
+        return size;
+    }
+
+    private ConcertSortType resolveSortType(
+            ConcertSortType sortType
+    ) {
+        return sortType == null
+                ? ConcertSortType.LATEST
+                : sortType;
+    }
+}

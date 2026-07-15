@@ -34,7 +34,14 @@ public enum ReservationErrorCode implements ErrorCode {
     CANCELLED_AT_REQUIRED(HttpStatus.BAD_REQUEST, "취소 시간은 필수입니다."),
     CURRENT_TIME_REQUIRED(HttpStatus.BAD_REQUEST, "현재 시간은 필수입니다."),
     EXPIRES_AT_REQUIRED(HttpStatus.BAD_REQUEST, "만료 시간은 필수입니다."),
-    TOTAL_AMOUNT_OVERFLOW(HttpStatus.BAD_REQUEST, "총 금액이 오버플로우되었습니다.");
+    TOTAL_AMOUNT_OVERFLOW(HttpStatus.BAD_REQUEST, "총 금액이 오버플로우되었습니다."),
+    RESERVATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "해당 예약을 조회할 권한이 없습니다."),
+    INVALID_PAGE_NUMBER(HttpStatus.BAD_REQUEST, "페이지 번호는 0 이상이어야 합니다."),
+    INVALID_PAGE_SIZE(HttpStatus.BAD_REQUEST, "페이지 크기는 1 이상 100 이하여야 합니다."),
+    RESERVATION_CANCELLATION_DEADLINE_PASSED(HttpStatus.CONFLICT, "공연이 시작된 이후에는 예약을 취소할 수 없습니다."),
+    RESERVATION_NOT_CANCELLABLE(HttpStatus.CONFLICT, "현재 예약 상태에서는 예약을 취소할 수 없습니다."),
+    INVALID_RESERVATION_DATE_RANGE(HttpStatus.BAD_REQUEST, "예약 조회 시작일은 종료일보다 이전이어야 합니다."),
+    INVALID_SEARCH_ID(HttpStatus.BAD_REQUEST, "검색 조건 ID는 1 이상이어야 합니다.");
 
 
     private final HttpStatus status;
