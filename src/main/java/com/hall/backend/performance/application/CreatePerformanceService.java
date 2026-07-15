@@ -20,23 +20,13 @@ public class CreatePerformanceService {
     private final PerformanceRepository performanceRepository;
 
     @Transactional
-    public CreatePerformanceResponse create(
-            CreatePerformanceRequest request
-    ) {
-        Concert concert =
-                concertRepository
-                        .findById(request.concertId())
-                        .orElseThrow(
-                                () -> new PerformanceException(
-                                        PerformanceErrorCode
-                                                .CONCERT_NOT_FOUND
-                                )
-                        );
+    public CreatePerformanceResponse create(CreatePerformanceRequest request) {
+        Concert concert = concertRepository.findById(request.concertId())
+                .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.CONCERT_NOT_FOUND));
 
         validateDuplicatedPerformance(request);
 
-        Performance performance =
-                Performance.create(
+        Performance performance = Performance.create(
                         concert,
                         request.startsAt(),
                         request.reservationOpensAt(),
@@ -44,31 +34,19 @@ public class CreatePerformanceService {
                         request.maxTicketsPerMember()
                 );
 
-        Performance savedPerformance =
-                performanceRepository.save(
-                        performance
-                );
+        Performance savedPerformance = performanceRepository.save(performance);
 
-        return CreatePerformanceResponse.from(
-                savedPerformance
-        );
+        return CreatePerformanceResponse.from(savedPerformance);
     }
 
-    private void validateDuplicatedPerformance(
-            CreatePerformanceRequest request
-    ) {
-        boolean exists =
-                performanceRepository
-                        .existsByConcertIdAndStartsAt(
+    private void validateDuplicatedPerformance(CreatePerformanceRequest request) {
+        boolean exists = performanceRepository.existsByConcertIdAndStartsAt(
                                 request.concertId(),
                                 request.startsAt()
                         );
 
         if (exists) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .PERFORMANCE_ALREADY_EXISTS
-            );
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_ALREADY_EXISTS);
         }
     }
 }

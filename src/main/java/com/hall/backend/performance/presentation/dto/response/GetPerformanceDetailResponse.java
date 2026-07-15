@@ -18,10 +18,8 @@ public record GetPerformanceDetailResponse(
         SeatSummary seatSummary
 ) {
 
-    public static GetPerformanceDetailResponse of(
-            Performance performance,
-            List<PerformanceSeat> performanceSeats
-    ) {
+    public static GetPerformanceDetailResponse of(Performance performance,
+            List<PerformanceSeat> performanceSeats) {
         return new GetPerformanceDetailResponse(
                 performance.getId(),
                 ConcertResponse.from(performance),
@@ -42,9 +40,7 @@ public record GetPerformanceDetailResponse(
             String status
     ) {
 
-        private static ConcertResponse from(
-                Performance performance
-        ) {
+        private static ConcertResponse from(Performance performance) {
             var concert = performance.getConcert();
 
             return new ConcertResponse(
@@ -65,39 +61,20 @@ public record GetPerformanceDetailResponse(
             long blockedSeatCount
     ) {
 
-        private static SeatSummary from(
-                List<PerformanceSeat> performanceSeats
-        ) {
+        private static SeatSummary from(List<PerformanceSeat> performanceSeats) {
             return new SeatSummary(
                     performanceSeats.size(),
-                    count(
-                            performanceSeats,
-                            PerformanceSeatStatus.AVAILABLE
-                    ),
-                    count(
-                            performanceSeats,
-                            PerformanceSeatStatus.HELD
-                    ),
-                    count(
-                            performanceSeats,
-                            PerformanceSeatStatus.RESERVED
-                    ),
-                    count(
-                            performanceSeats,
-                            PerformanceSeatStatus.BLOCKED
-                    )
+                    count(performanceSeats, PerformanceSeatStatus.AVAILABLE),
+                    count(performanceSeats, PerformanceSeatStatus.HELD),
+                    count(performanceSeats, PerformanceSeatStatus.RESERVED),
+                    count(performanceSeats, PerformanceSeatStatus.BLOCKED)
             );
         }
 
-        private static long count(
-                List<PerformanceSeat> performanceSeats,
-                PerformanceSeatStatus status
-        ) {
+        private static long count(List<PerformanceSeat> performanceSeats,
+                PerformanceSeatStatus status) {
             return performanceSeats.stream()
-                    .filter(performanceSeat ->
-                            performanceSeat.getStatus() == status
-                    )
-                    .count();
+                    .filter(performanceSeat -> performanceSeat.getStatus() == status).count();
         }
     }
 }

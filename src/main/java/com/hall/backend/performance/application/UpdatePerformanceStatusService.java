@@ -20,50 +20,32 @@ public class UpdatePerformanceStatusService {
     private final PerformanceSeatRepository performanceSeatRepository;
 
     @Transactional
-    public UpdatePerformanceStatusResponse updateStatus(
-            Long performanceId,
-            UpdatePerformanceStatusRequest request
-    ) {
+    public UpdatePerformanceStatusResponse updateStatus(Long performanceId,
+            UpdatePerformanceStatusRequest request) {
         Performance performance = performanceRepository
                 .findById(performanceId)
-                .orElseThrow(() ->
-                        new PerformanceException(
-                                PerformanceErrorCode.PERFORMANCE_NOT_FOUND
-                        )
-                );
+                .orElseThrow(
+                        () -> new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND));
 
-        boolean hasSeats =
-                performanceSeatRepository
-                        .existsByPerformanceId(
-                                performanceId
-                        );
+        boolean hasSeats = performanceSeatRepository.existsByPerformanceId(performanceId);
 
         if (!hasSeats) {
             throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_SEATS_REQUIRED);
         }
 
-        changeStatus(
-                performance,
-                request.status()
-        );
+        changeStatus(performance, request.status());
 
         return UpdatePerformanceStatusResponse.from(performance);
     }
 
-    private void changeStatus(
-            Performance performance,
-            PerformanceStatus requestedStatus
-    ) {
+    private void changeStatus(Performance performance, PerformanceStatus requestedStatus) {
         switch (requestedStatus) {
             case OPEN -> performance.open();
             case CLOSED -> performance.close();
             case CANCELLED -> performance.cancel();
             case COMPLETED -> performance.complete();
-
-            case PREPARING, SOLD_OUT -> throw new PerformanceException(
-                    PerformanceErrorCode
-                            .INVALID_PERFORMANCE_STATUS
-            );
+            case PREPARING, SOLD_OUT ->
+                    throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
     }
 }

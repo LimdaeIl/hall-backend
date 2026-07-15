@@ -13,9 +13,7 @@ public record UpdatePerformanceStatusResponse(
         LocalDateTime reservationClosesAt
 ) {
 
-    public static UpdatePerformanceStatusResponse from(
-            Performance performance
-    ) {
+    public static UpdatePerformanceStatusResponse from(Performance performance) {
         return new UpdatePerformanceStatusResponse(
                 performance.getId(),
                 performance.getConcert().getId(),

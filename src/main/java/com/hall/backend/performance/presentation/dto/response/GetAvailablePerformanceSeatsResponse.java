@@ -13,10 +13,8 @@ public record GetAvailablePerformanceSeatsResponse(
         List<GetAvailablePerformanceSeatResponse> seats
 ) {
 
-    public static GetAvailablePerformanceSeatsResponse of(
-            Performance performance,
-            List<GetAvailablePerformanceSeatResponse> seats
-    ) {
+    public static GetAvailablePerformanceSeatsResponse of(Performance performance,
+            List<GetAvailablePerformanceSeatResponse> seats) {
         return new GetAvailablePerformanceSeatsResponse(
                 performance.getId(),
                 performance.getConcert().getId(),

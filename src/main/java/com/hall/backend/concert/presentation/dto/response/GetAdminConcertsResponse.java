@@ -16,9 +16,7 @@ public record GetAdminConcertsResponse(
         Long updatedBy
 ) {
 
-    public static GetAdminConcertsResponse from(
-            Concert concert
-    ) {
+    public static GetAdminConcertsResponse from(Concert concert) {
         return new GetAdminConcertsResponse(
                 concert.getId(),
                 concert.getTitle(),

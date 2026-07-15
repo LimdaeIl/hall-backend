@@ -8,30 +8,19 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface PaymentRepository
-        extends JpaRepository<Payment, Long> {
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
-    Optional<Payment> findByReservationId(
-            Long reservationId
-    );
+    Optional<Payment> findByReservationId(Long reservationId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select p
-            from Payment p
-            join fetch p.reservation
-            where p.reservation.id = :reservationId
+            SELECT p
+            FROM Payment p
+            JOIN FETCH p.reservation
+            WHERE p.reservation.id = :reservationId
             """)
     Optional<Payment> findByReservationIdForUpdate(
-            @Param("reservationId")
-            Long reservationId
-    );
-
-    boolean existsByReservationId(
-            Long reservationId
-    );
-
-    Optional<Payment> findByTransactionKey(
-            String transactionKey
+            @Param("reservationId") Long reservationId
     );
 }
+

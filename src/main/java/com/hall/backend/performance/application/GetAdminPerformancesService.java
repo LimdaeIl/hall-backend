@@ -20,8 +20,7 @@ public class GetAdminPerformancesService {
 
     private static final int MAX_PAGE_SIZE = 100;
 
-    private final PerformanceRepository
-            performanceRepository;
+    private final PerformanceRepository performanceRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<GetAdminPerformancesResponse>
@@ -39,30 +38,25 @@ public class GetAdminPerformancesService {
             Integer size,
             PerformanceSortType sort
     ) {
-        int resolvedPage =
-                page == null || page < 0
+        int resolvedPage = page == null || page < 0
                         ? 0
                         : page;
 
-        int resolvedSize =
-                size == null || size <= 0
+        int resolvedSize = size == null || size <= 0
                         ? 20
                         : Math.min(size, MAX_PAGE_SIZE);
 
-        PerformanceSortType resolvedSort =
-                sort == null
+        PerformanceSortType resolvedSort = sort == null
                         ? PerformanceSortType.LATEST
                         : sort;
 
-        Pageable pageable =
-                PageRequest.of(
+        Pageable pageable = PageRequest.of(
                         resolvedPage,
                         resolvedSize,
                         resolvedSort.toSort()
                 );
 
-        Page<Performance> performances =
-                performanceRepository.searchForAdmin(
+        Page<Performance> performances = performanceRepository.searchForAdmin(
                         normalizeId(concertId),
                         normalizeText(concertTitle),
                         status,
@@ -75,10 +69,7 @@ public class GetAdminPerformancesService {
                         pageable
                 );
 
-        return PageResponse.from(
-                performances,
-                GetAdminPerformancesResponse::from
-        );
+        return PageResponse.from(performances, GetAdminPerformancesResponse::from);
     }
 
     private Long normalizeId(Long id) {

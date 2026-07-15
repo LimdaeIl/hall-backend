@@ -16,9 +16,7 @@ public record GetAdminPerformancesResponse(
         int maxTicketsPerMember
 ) {
 
-    public static GetAdminPerformancesResponse from(
-            Performance performance
-    ) {
+    public static GetAdminPerformancesResponse from(Performance performance) {
         return new GetAdminPerformancesResponse(
                 performance.getId(),
                 performance.getConcert().getId(),

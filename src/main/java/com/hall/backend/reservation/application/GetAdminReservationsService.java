@@ -25,11 +25,9 @@ public class GetAdminReservationsService {
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
 
-    private static final ZoneId SERVICE_ZONE =
-            ZoneId.of("Asia/Seoul");
+    private static final ZoneId SERVICE_ZONE = ZoneId.of("Asia/Seoul");
 
-    private final ReservationRepository
-            reservationRepository;
+    private final ReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<GetAdminReservationsResponse> getReservations(
@@ -45,40 +43,20 @@ public class GetAdminReservationsService {
             Integer size,
             AdminReservationSortType sortType
     ) {
-        validateIds(
-                memberId,
-                concertId,
-                performanceId
-        );
-
-        String normalizedMemberEmail =
-                normalizeSearchKeyword(memberEmail);
-
-        Instant resolvedCreatedFrom =
-                resolveCreatedFrom(createdFrom);
-
-        Instant resolvedCreatedTo =
-                resolveCreatedTo(createdTo);
-
-        validateDateRange(
-                resolvedCreatedFrom,
-                resolvedCreatedTo
-        );
+        validateIds(memberId, concertId, performanceId);
+        String normalizedMemberEmail = normalizeSearchKeyword(memberEmail);
+        Instant resolvedCreatedFrom = resolveCreatedFrom(createdFrom);
+        Instant resolvedCreatedTo = resolveCreatedTo(createdTo);
+        validateDateRange(resolvedCreatedFrom, resolvedCreatedTo);
 
         int resolvedPage = resolvePage(page);
         int resolvedSize = resolveSize(size);
 
-        AdminReservationSortType resolvedSortType =
-                resolveSortType(sortType);
+        AdminReservationSortType resolvedSortType = resolveSortType(sortType);
 
-        PageRequest pageRequest = PageRequest.of(
-                resolvedPage,
-                resolvedSize,
-                resolvedSortType.toSort()
-        );
+        PageRequest pageRequest = PageRequest.of(resolvedPage, resolvedSize, resolvedSortType.toSort());
 
-        Page<AdminReservationProjection> reservations =
-                reservationRepository.searchForAdmin(
+        Page<AdminReservationProjection> reservations = reservationRepository.searchForAdmin(
                         memberId,
                         normalizedMemberEmail,
                         concertId,
@@ -90,15 +68,10 @@ public class GetAdminReservationsService {
                         pageRequest
                 );
 
-        return PageResponse.from(
-                reservations,
-                GetAdminReservationsResponse::from
-        );
+        return PageResponse.from(reservations, GetAdminReservationsResponse::from);
     }
 
-    private String normalizeSearchKeyword(
-            String keyword
-    ) {
+    private String normalizeSearchKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return null;
         }
@@ -106,21 +79,15 @@ public class GetAdminReservationsService {
         return keyword.trim();
     }
 
-    private Instant resolveCreatedFrom(
-            LocalDate createdFrom
-    ) {
+    private Instant resolveCreatedFrom(LocalDate createdFrom) {
         if (createdFrom == null) {
             return null;
         }
 
-        return createdFrom
-                .atStartOfDay(SERVICE_ZONE)
-                .toInstant();
+        return createdFrom.atStartOfDay(SERVICE_ZONE).toInstant();
     }
 
-    private Instant resolveCreatedTo(
-            LocalDate createdTo
-    ) {
+    private Instant resolveCreatedTo(LocalDate createdTo) {
         if (createdTo == null) {
             return null;
         }
@@ -131,44 +98,23 @@ public class GetAdminReservationsService {
                 .toInstant();
     }
 
-    private void validateDateRange(
-            Instant createdFrom,
-            Instant createdTo
-    ) {
-        if (createdFrom != null
-                && createdTo != null
-                && !createdFrom.isBefore(createdTo)) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_RESERVATION_DATE_RANGE
-            );
+    private void validateDateRange(Instant createdFrom, Instant createdTo) {
+        if (createdFrom != null && createdTo != null && !createdFrom.isBefore(createdTo)) {
+            throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_DATE_RANGE);
         }
     }
 
-    private void validateIds(
-            Long memberId,
-            Long concertId,
-            Long performanceId
-    ) {
+    private void validateIds(Long memberId, Long concertId, Long performanceId) {
         if (memberId != null && memberId <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_SEARCH_ID
-            );
+            throw new ReservationException(ReservationErrorCode.INVALID_SEARCH_ID);
         }
 
         if (concertId != null && concertId <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_SEARCH_ID
-            );
+            throw new ReservationException(ReservationErrorCode.INVALID_SEARCH_ID);
         }
 
-        if (performanceId != null
-                && performanceId <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_SEARCH_ID
+        if (performanceId != null && performanceId <= 0) {
+            throw new ReservationException(ReservationErrorCode.INVALID_SEARCH_ID
             );
         }
     }
@@ -179,10 +125,7 @@ public class GetAdminReservationsService {
         }
 
         if (page < 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_PAGE_NUMBER
-            );
+            throw new ReservationException(ReservationErrorCode.INVALID_PAGE_NUMBER);
         }
 
         return page;
@@ -194,18 +137,13 @@ public class GetAdminReservationsService {
         }
 
         if (size <= 0 || size > MAX_PAGE_SIZE) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_PAGE_SIZE
-            );
+            throw new ReservationException(ReservationErrorCode.INVALID_PAGE_SIZE);
         }
 
         return size;
     }
 
-    private AdminReservationSortType resolveSortType(
-            AdminReservationSortType sortType
-    ) {
+    private AdminReservationSortType resolveSortType(AdminReservationSortType sortType) {
         return sortType == null
                 ? AdminReservationSortType.LATEST
                 : sortType;

@@ -49,46 +49,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PerformanceAdminController implements PerformanceAdminControllerDocs {
 
-    private final CreatePerformanceService
-            createPerformanceService;
-
-    private final GetAdminPerformancesService
-            getAdminPerformancesService;
-
-    private final UpdatePerformanceService
-            updatePerformanceService;
-
-    private final DeletePerformanceService
-            deletePerformanceService;
-
-    private final UpdatePerformanceStatusService
-            updatePerformanceStatusService;
-
-    private final CreatePerformanceSeatsService
-            createPerformanceSeatsService;
-
-    private final GetAdminPerformanceSeatsService
-            getAdminPerformanceSeatsService;
-
-    private final UpdatePerformanceSeatService
-            updatePerformanceSeatService;
-
-    private final DeletePerformanceSeatService
-            deletePerformanceSeatService;
+    private final CreatePerformanceService createPerformanceService;
+    private final GetAdminPerformancesService getAdminPerformancesService;
+    private final UpdatePerformanceService updatePerformanceService;
+    private final DeletePerformanceService deletePerformanceService;
+    private final UpdatePerformanceStatusService updatePerformanceStatusService;
+    private final CreatePerformanceSeatsService createPerformanceSeatsService;
+    private final GetAdminPerformanceSeatsService getAdminPerformanceSeatsService;
+    private final UpdatePerformanceSeatService updatePerformanceSeatService;
+    private final DeletePerformanceSeatService deletePerformanceSeatService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/performances")
     public ResponseEntity<
-            ApiResponse<CreatePerformanceResponse>
-            > createPerformance(
-            @Valid
-            @RequestBody
-            CreatePerformanceRequest request
+            ApiResponse<CreatePerformanceResponse>> createPerformance(
+            @Valid @RequestBody CreatePerformanceRequest request
     ) {
-        CreatePerformanceResponse response =
-                createPerformanceService.create(
-                        request
-                );
+        CreatePerformanceResponse response = createPerformanceService.create(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -102,64 +79,32 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/performances")
-    public ResponseEntity<
-            ApiResponse<
-                    PageResponse<GetAdminPerformancesResponse>
-                    >
-            > getPerformances(
-            @RequestParam(required = false)
-            Long concertId,
+    public ResponseEntity<ApiResponse<PageResponse<GetAdminPerformancesResponse>>> getPerformances(
+            @RequestParam(required = false) Long concertId,
+            @RequestParam(required = false) String concertTitle,
+            @RequestParam(required = false) PerformanceStatus status,
 
             @RequestParam(required = false)
-            String concertTitle,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startsAtFrom,
 
             @RequestParam(required = false)
-            PerformanceStatus status,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startsAtTo,
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime startsAtFrom,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime reservationOpensAtFrom,
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime startsAtTo,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime reservationOpensAtTo,
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime reservationOpensAtFrom,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime reservationClosesAtFrom,
 
             @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime reservationOpensAtTo,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime reservationClosesAtTo,
 
-            @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime reservationClosesAtFrom,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE_TIME
-            )
-            LocalDateTime reservationClosesAtTo,
-
-            @RequestParam(defaultValue = "0")
-            Integer page,
-
-            @RequestParam(defaultValue = "20")
-            Integer size,
-
-            @RequestParam(defaultValue = "LATEST")
-            PerformanceSortType sort
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "LATEST") PerformanceSortType sort
     ) {
         PageResponse<GetAdminPerformancesResponse> response =
                 getAdminPerformancesService
@@ -188,20 +133,12 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/performances/{performanceId}")
-    public ResponseEntity<
-            ApiResponse<UpdatePerformanceResponse>
-            > updatePerformance(
+    public ResponseEntity<ApiResponse<UpdatePerformanceResponse>> updatePerformance(
             @PathVariable Long performanceId,
-
-            @Valid
-            @RequestBody
-            UpdatePerformanceRequest request
+            @Valid @RequestBody UpdatePerformanceRequest request
     ) {
-        UpdatePerformanceResponse response =
-                updatePerformanceService.update(
-                        performanceId,
-                        request
-                );
+        UpdatePerformanceResponse response = updatePerformanceService.update(performanceId,
+                request);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -213,22 +150,15 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/performances/{performanceId}")
-    public ResponseEntity<
-            ApiResponse<DeletePerformanceResponse>
-            > deletePerformance(
+    public ResponseEntity<ApiResponse<DeletePerformanceResponse>> deletePerformance(
             @PathVariable Long performanceId
     ) {
-        DeletePerformanceResponse response =
-                deletePerformanceService.delete(
-                        performanceId
-                );
+        DeletePerformanceResponse response = deletePerformanceService.delete(performanceId);
 
-        String message =
-                response.deleteType()
-                        == DeletePerformanceResponse
-                        .DeleteType.DELETED
-                        ? "공연 삭제: 공연이 삭제되었습니다."
-                        : "공연 취소: 예약 이력이 있어 공연이 취소 처리되었습니다.";
+        String message = response.deleteType() == DeletePerformanceResponse
+                .DeleteType.DELETED
+                ? "공연 삭제: 공연이 삭제되었습니다."
+                : "공연 취소: 예약 이력이 있어 공연이 취소 처리되었습니다.";
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -242,21 +172,12 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
     @PatchMapping(
             "/performances/{performanceId}/status"
     )
-    public ResponseEntity<
-            ApiResponse<UpdatePerformanceStatusResponse>
-            > updatePerformanceStatus(
+    public ResponseEntity<ApiResponse<UpdatePerformanceStatusResponse>> updatePerformanceStatus(
             @PathVariable Long performanceId,
-
-            @Valid
-            @RequestBody
-            UpdatePerformanceStatusRequest request
+            @Valid @RequestBody UpdatePerformanceStatusRequest request
     ) {
         UpdatePerformanceStatusResponse response =
-                updatePerformanceStatusService
-                        .updateStatus(
-                                performanceId,
-                                request
-                        );
+                updatePerformanceStatusService.updateStatus(performanceId, request);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -267,23 +188,13 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping(
-            "/performances/{performanceId}/seats"
-    )
-    public ResponseEntity<
-            ApiResponse<CreatePerformanceSeatsResponse>
-            > createPerformanceSeats(
+    @PostMapping("/performances/{performanceId}/seats")
+    public ResponseEntity<ApiResponse<CreatePerformanceSeatsResponse>> createPerformanceSeats(
             @PathVariable Long performanceId,
-
-            @Valid
-            @RequestBody
-            CreatePerformanceSeatsRequest request
+            @Valid @RequestBody CreatePerformanceSeatsRequest request
     ) {
         CreatePerformanceSeatsResponse response =
-                createPerformanceSeatsService.create(
-                        performanceId,
-                        request
-                );
+                createPerformanceSeatsService.create(performanceId, request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -296,19 +207,13 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping(
-            "/performances/{performanceId}/seats"
-    )
+    @GetMapping("/performances/{performanceId}/seats")
     public ResponseEntity<
-            ApiResponse<GetAdminPerformanceSeatsResponse>
-            > getPerformanceSeats(
+            ApiResponse<GetAdminPerformanceSeatsResponse>> getPerformanceSeats(
             @PathVariable Long performanceId
     ) {
         GetAdminPerformanceSeatsResponse response =
-                getAdminPerformanceSeatsService
-                        .getSeats(
-                                performanceId
-                        );
+                getAdminPerformanceSeatsService.getSeats(performanceId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -320,20 +225,12 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/performance-seats/{performanceSeatId}")
-    public ResponseEntity<
-            ApiResponse<UpdatePerformanceSeatResponse>
-            > updatePerformanceSeat(
+    public ResponseEntity<ApiResponse<UpdatePerformanceSeatResponse>> updatePerformanceSeat(
             @PathVariable Long performanceSeatId,
-
-            @Valid
-            @RequestBody
-            UpdatePerformanceSeatRequest request
+            @Valid @RequestBody UpdatePerformanceSeatRequest request
     ) {
         UpdatePerformanceSeatResponse response =
-                updatePerformanceSeatService.update(
-                        performanceSeatId,
-                        request
-                );
+                updatePerformanceSeatService.update(performanceSeatId, request);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -345,15 +242,11 @@ public class PerformanceAdminController implements PerformanceAdminControllerDoc
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/performance-seats/{performanceSeatId}")
-    public ResponseEntity<
-            ApiResponse<DeletePerformanceSeatResponse>
-            > deletePerformanceSeat(
+    public ResponseEntity<ApiResponse<DeletePerformanceSeatResponse>> deletePerformanceSeat(
             @PathVariable Long performanceSeatId
     ) {
         DeletePerformanceSeatResponse response =
-                deletePerformanceSeatService.delete(
-                        performanceSeatId
-                );
+                deletePerformanceSeatService.delete(performanceSeatId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(

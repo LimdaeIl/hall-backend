@@ -68,11 +68,7 @@ public class Reservation extends BaseAuditEntity {
     @Column(name = "version", nullable = false)
     private Long version;
 
-    private Reservation(
-            Member member,
-            Performance performance,
-            LocalDateTime expiresAt
-    ) {
+    private Reservation(Member member, Performance performance, LocalDateTime expiresAt) {
         validateMember(member);
         validatePerformance(performance);
         validateExpiresAt(expiresAt);
@@ -84,16 +80,9 @@ public class Reservation extends BaseAuditEntity {
         this.totalAmount = 0L;
     }
 
-    public static Reservation create(
-            Member member,
-            Performance performance,
-            LocalDateTime expiresAt
-    ) {
-        return new Reservation(
-                member,
-                performance,
-                expiresAt
-        );
+    public static Reservation create(Member member, Performance performance,
+            LocalDateTime expiresAt) {
+        return new Reservation(member, performance, expiresAt);
     }
 
     public void addSeat(ReservationSeat reservationSeat) {
@@ -121,15 +110,14 @@ public class Reservation extends BaseAuditEntity {
         }
 
         reservationSeats.add(reservationSeat);
+        totalAmount = calculateTotalAmount(reservationSeat.getPrice());
+    }
 
-        try {
-            totalAmount = Math.addExact(
-                    totalAmount,
-                    reservationSeat.getPrice()
-            );
-        } catch (ArithmeticException exception) {
+    private long calculateTotalAmount(long price) {
+        if (Long.MAX_VALUE - totalAmount < price) {
             throw new ReservationException(ReservationErrorCode.TOTAL_AMOUNT_OVERFLOW);
         }
+        return totalAmount + price;
     }
 
     public void complete(LocalDateTime completedAt) {
@@ -150,8 +138,7 @@ public class Reservation extends BaseAuditEntity {
     }
 
     public void cancel(LocalDateTime cancelledAt) {
-        if (status != ReservationStatus.PENDING_PAYMENT
-                && status != ReservationStatus.COMPLETED) {
+        if (status != ReservationStatus.PENDING_PAYMENT && status != ReservationStatus.COMPLETED) {
             throw new ReservationException(ReservationErrorCode.INVALID_RESERVATION_STATUS);
         }
 
@@ -165,23 +152,9 @@ public class Reservation extends BaseAuditEntity {
         this.cancelledAt = cancelledAt;
     }
 
-    public void expire(LocalDateTime now) {
-        validatePendingPayment();
-
-        if (now == null) {
-            throw new ReservationException(ReservationErrorCode.CURRENT_TIME_REQUIRED);
-        }
-
-        if (now.isBefore(expiresAt)) {
-            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_EXPIRED);
-        }
-
-        reservationSeats.forEach(ReservationSeat::cancel);
-        this.status = ReservationStatus.EXPIRED;
-    }
 
     public boolean isOwnedBy(Long memberId) {
-        return memberId != null && member.getId().equals(memberId);
+        return member.getId().equals(memberId);
     }
 
     public boolean isPendingPayment() {

@@ -69,15 +69,7 @@ public class Concert extends BaseAuditEntity {
         this.status = ConcertStatus.OPEN;
     }
 
-    public void close() {
-        this.status = ConcertStatus.CLOSED;
-    }
-
-    public void updateInformation(
-            String title,
-            String artist,
-            String description
-    ) {
+    public void updateInformation(String title, String artist, String description) {
         if (title != null) {
             validateTitle(title);
             this.title = title.trim();

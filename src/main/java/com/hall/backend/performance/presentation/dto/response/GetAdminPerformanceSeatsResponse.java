@@ -21,38 +21,19 @@ public record GetAdminPerformanceSeatsResponse(
         List<SeatResponse> seats
 ) {
 
-    public static GetAdminPerformanceSeatsResponse of(
-            Performance performance,
-            List<PerformanceSeat> performanceSeats
-    ) {
+    public static GetAdminPerformanceSeatsResponse of(Performance performance, List<PerformanceSeat> performanceSeats) {
         List<SeatResponse> seatResponses =
                 performanceSeats.stream()
                         .map(SeatResponse::from)
                         .toList();
 
-        long availableSeatCount =
-                countByStatus(
-                        performanceSeats,
-                        PerformanceSeatStatus.AVAILABLE
-                );
+        long availableSeatCount = countByStatus(performanceSeats, PerformanceSeatStatus.AVAILABLE);
 
-        long heldSeatCount =
-                countByStatus(
-                        performanceSeats,
-                        PerformanceSeatStatus.HELD
-                );
+        long heldSeatCount = countByStatus(performanceSeats, PerformanceSeatStatus.HELD);
 
-        long reservedSeatCount =
-                countByStatus(
-                        performanceSeats,
-                        PerformanceSeatStatus.RESERVED
-                );
+        long reservedSeatCount = countByStatus(performanceSeats, PerformanceSeatStatus.RESERVED);
 
-        long blockedSeatCount =
-                countByStatus(
-                        performanceSeats,
-                        PerformanceSeatStatus.BLOCKED
-                );
+        long blockedSeatCount = countByStatus(performanceSeats, PerformanceSeatStatus.BLOCKED);
 
         return new GetAdminPerformanceSeatsResponse(
                 performance.getId(),
@@ -69,14 +50,9 @@ public record GetAdminPerformanceSeatsResponse(
         );
     }
 
-    private static long countByStatus(
-            List<PerformanceSeat> performanceSeats,
-            PerformanceSeatStatus status
-    ) {
+    private static long countByStatus(List<PerformanceSeat> performanceSeats, PerformanceSeatStatus status) {
         return performanceSeats.stream()
-                .filter(performanceSeat ->
-                        performanceSeat.getStatus() == status
-                )
+                .filter(performanceSeat -> performanceSeat.getStatus() == status)
                 .count();
     }
 
@@ -92,9 +68,7 @@ public record GetAdminPerformanceSeatsResponse(
             Long version
     ) {
 
-        public static SeatResponse from(
-                PerformanceSeat performanceSeat
-        ) {
+        public static SeatResponse from(PerformanceSeat performanceSeat) {
             return new SeatResponse(
                     performanceSeat.getId(),
                     performanceSeat.getSeat().getId(),

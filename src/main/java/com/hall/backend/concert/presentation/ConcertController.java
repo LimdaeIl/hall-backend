@@ -26,36 +26,16 @@ public class ConcertController implements ConcertControllerDocs {
 
     private final GetConcertsService getConcertsService;
     private final GetConcertDetailService getConcertDetailService;
-    private final GetConcertPerformancesService
-            getConcertPerformancesService;
+    private final GetConcertPerformancesService getConcertPerformancesService;
 
     @GetMapping
-    public ResponseEntity<
-            ApiResponse<PageResponse<GetConcertsResponse>>
-            > getConcerts(
-            @RequestParam(required = false)
-            String title,
-
-            @RequestParam(required = false)
-            String artist,
-
-            @RequestParam(defaultValue = "0")
-            Integer page,
-
-            @RequestParam(defaultValue = "20")
-            Integer size,
-
-            @RequestParam(defaultValue = "LATEST")
-            ConcertSortType sort
-    ) {
-        PageResponse<GetConcertsResponse> response =
-                getConcertsService.getConcerts(
-                        title,
-                        artist,
-                        page,
-                        size,
-                        sort
-                );
+    public ResponseEntity<ApiResponse<PageResponse<GetConcertsResponse>>> getConcerts(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String artist,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "LATEST") ConcertSortType sort) {
+        PageResponse<GetConcertsResponse> response = getConcertsService.getConcerts(title, artist, page, size, sort);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -66,13 +46,9 @@ public class ConcertController implements ConcertControllerDocs {
     }
 
     @GetMapping("/{concertId}")
-    public ResponseEntity<
-            ApiResponse<GetConcertDetailResponse>
-            > getConcert(
-            @PathVariable Long concertId
-    ) {
-        GetConcertDetailResponse response =
-                getConcertDetailService.getConcert(concertId);
+    public ResponseEntity<ApiResponse<GetConcertDetailResponse>> getConcert(
+            @PathVariable Long concertId) {
+        GetConcertDetailResponse response = getConcertDetailService.getConcert(concertId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -83,15 +59,11 @@ public class ConcertController implements ConcertControllerDocs {
     }
 
     @GetMapping("/{concertId}/performances")
-    public ResponseEntity<
-            ApiResponse<List<GetConcertPerformancesResponse>>
-            > getConcertPerformances(
+    public ResponseEntity<ApiResponse<List<GetConcertPerformancesResponse>>> getConcertPerformances(
             @PathVariable Long concertId
     ) {
         List<GetConcertPerformancesResponse> response =
-                getConcertPerformancesService.getPerformances(
-                        concertId
-                );
+                getConcertPerformancesService.getPerformances(concertId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(

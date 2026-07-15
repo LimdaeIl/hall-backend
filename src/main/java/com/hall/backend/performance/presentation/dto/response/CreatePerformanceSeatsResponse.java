@@ -11,10 +11,7 @@ public record CreatePerformanceSeatsResponse(
         List<SeatResponse> seats
 ) {
 
-    public static CreatePerformanceSeatsResponse of(
-            Performance performance,
-            List<PerformanceSeat> performanceSeats
-    ) {
+    public static CreatePerformanceSeatsResponse of(Performance performance, List<PerformanceSeat> performanceSeats) {
         List<SeatResponse> seatResponses =
                 performanceSeats.stream()
                         .map(SeatResponse::from)
@@ -39,9 +36,7 @@ public record CreatePerformanceSeatsResponse(
             String status
     ) {
 
-        public static SeatResponse from(
-                PerformanceSeat performanceSeat
-        ) {
+        public static SeatResponse from(PerformanceSeat performanceSeat) {
             return new SeatResponse(
                     performanceSeat.getId(),
                     performanceSeat.getSeat().getId(),

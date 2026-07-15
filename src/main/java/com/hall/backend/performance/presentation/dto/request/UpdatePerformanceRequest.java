@@ -11,9 +11,7 @@ public record UpdatePerformanceRequest(
 
         LocalDateTime reservationClosesAt,
 
-        @Positive(
-                message = "회원당 최대 예매 수량은 1 이상이어야 합니다."
-        )
+        @Positive(message = "회원당 최대 예매 수량은 1 이상이어야 합니다.")
         Integer maxTicketsPerMember
 
 ) {

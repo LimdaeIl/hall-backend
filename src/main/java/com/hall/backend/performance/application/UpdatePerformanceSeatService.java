@@ -21,108 +21,56 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UpdatePerformanceSeatService {
 
-    private final PerformanceSeatRepository
-            performanceSeatRepository;
-
+    private final PerformanceSeatRepository performanceSeatRepository;
     private final SeatRepository seatRepository;
 
     @Transactional
-    public UpdatePerformanceSeatResponse update(
-            Long performanceSeatId,
-            UpdatePerformanceSeatRequest request
-    ) {
+    public UpdatePerformanceSeatResponse update(Long performanceSeatId,
+            UpdatePerformanceSeatRequest request) {
         validatePerformanceSeatId(performanceSeatId);
         validateRequest(request);
 
-        PerformanceSeat performanceSeat =
-                performanceSeatRepository
-                        .findByIdForUpdate(
-                                performanceSeatId
-                        )
-                        .orElseThrow(
-                                () -> new PerformanceException(
-                                        PerformanceErrorCode
-                                                .SEAT_NOT_FOUND
-                                )
-                        );
+        PerformanceSeat performanceSeat = performanceSeatRepository.findByIdForUpdate(
+                        performanceSeatId)
+                .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.SEAT_NOT_FOUND));
 
-        performanceSeat
-                .validateAdministrativelyEditable();
+        performanceSeat.validateAdministrativelyEditable();
 
         Seat seat = performanceSeat.getSeat();
+        String normalizedSeatNumber = normalizeSeatNumber(request.seatNumber());
+        validateDuplicatedSeatNumber(seat, normalizedSeatNumber);
+        validateDuplicatedSeatPosition(seat, request.rowNumber(), request.columnNumber());
+        seat.updateLayout(normalizedSeatNumber, request.rowNumber(), request.columnNumber());
 
-        String normalizedSeatNumber =
-                normalizeSeatNumber(
-                        request.seatNumber()
-                );
+        SeatGrade grade = resolveGrade(request.grade());
 
-        validateDuplicatedSeatNumber(
-                seat,
-                normalizedSeatNumber
-        );
+        performanceSeat.updateInformation(grade, request.price());
 
-        validateDuplicatedSeatPosition(
-                seat,
-                request.rowNumber(),
-                request.columnNumber()
-        );
+        PerformanceSeatStatus status = resolveStatus(request.status());
 
-        seat.updateLayout(
-                normalizedSeatNumber,
-                request.rowNumber(),
-                request.columnNumber()
-        );
+        performanceSeat.changeAdministrativeStatus(status);
 
-        SeatGrade grade =
-                resolveGrade(request.grade());
-
-        performanceSeat.updateInformation(
-                grade,
-                request.price()
-        );
-
-        PerformanceSeatStatus status =
-                resolveStatus(request.status());
-
-        performanceSeat.changeAdministrativeStatus(
-                status
-        );
-
-        return UpdatePerformanceSeatResponse.from(
-                performanceSeat
-        );
+        return UpdatePerformanceSeatResponse.from(performanceSeat);
     }
 
-    private void validateRequest(
-            UpdatePerformanceSeatRequest request
-    ) {
+    private void validateRequest(UpdatePerformanceSeatRequest request) {
         if (request == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .NO_SEAT_UPDATE_FIELDS
-            );
+            throw new PerformanceException(PerformanceErrorCode.NO_SEAT_UPDATE_FIELDS);
         }
 
-        boolean hasUpdateField =
-                hasText(request.seatNumber())
-                        || hasText(request.grade())
-                        || request.price() != null
-                        || request.rowNumber() != null
-                        || request.columnNumber() != null
-                        || hasText(request.status());
+        boolean hasUpdateField = hasText(request.seatNumber())
+                || hasText(request.grade())
+                || request.price() != null
+                || request.rowNumber() != null
+                || request.columnNumber() != null
+                || hasText(request.status());
 
         if (!hasUpdateField) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .NO_SEAT_UPDATE_FIELDS
-            );
+            throw new PerformanceException(PerformanceErrorCode.NO_SEAT_UPDATE_FIELDS);
         }
     }
 
-    private void validateDuplicatedSeatNumber(
-            Seat seat,
-            String normalizedSeatNumber
-    ) {
+    private void validateDuplicatedSeatNumber(Seat seat, String normalizedSeatNumber) {
         if (normalizedSeatNumber == null) {
             return;
         }
@@ -133,70 +81,49 @@ public class UpdatePerformanceSeatService {
             return;
         }
 
-        boolean duplicated =
-                seatRepository
-                        .existsBySeatNumberAndIdNot(
-                                normalizedSeatNumber,
-                                seat.getId()
-                        );
+        boolean duplicated = seatRepository.existsBySeatNumberAndIdNot(normalizedSeatNumber,
+                seat.getId());
 
         if (duplicated) {
-            throw new ConcertException(
-                    ConcertErrorCode
-                            .DUPLICATE_SEAT_NUMBER
-            );
+            throw new ConcertException(ConcertErrorCode.DUPLICATE_SEAT_NUMBER);
         }
     }
 
-    private void validateDuplicatedSeatPosition(
-            Seat seat,
-            Integer requestedRowNumber,
-            Integer requestedColumnNumber
-    ) {
-        if (requestedRowNumber == null
-                && requestedColumnNumber == null) {
+    private void validateDuplicatedSeatPosition(Seat seat, Integer requestedRowNumber,
+            Integer requestedColumnNumber) {
+        if (requestedRowNumber == null && requestedColumnNumber == null) {
             return;
         }
 
-        int resolvedRowNumber =
-                requestedRowNumber == null
-                        ? seat.getRowNumber()
-                        : requestedRowNumber;
+        int resolvedRowNumber = requestedRowNumber == null
+                ? seat.getRowNumber()
+                : requestedRowNumber;
 
-        int resolvedColumnNumber =
-                requestedColumnNumber == null
-                        ? seat.getColumnNumber()
-                        : requestedColumnNumber;
+        int resolvedColumnNumber = requestedColumnNumber == null
+                ? seat.getColumnNumber()
+                : requestedColumnNumber;
 
-        boolean samePosition =
-                resolvedRowNumber ==
-                        seat.getRowNumber()
-                        && resolvedColumnNumber ==
-                        seat.getColumnNumber();
+        boolean samePosition = resolvedRowNumber ==
+                seat.getRowNumber()
+                && resolvedColumnNumber ==
+                seat.getColumnNumber();
 
         if (samePosition) {
             return;
         }
 
-        boolean duplicated =
-                seatRepository
-                        .existsByRowNumberAndColumnNumberAndIdNot(
-                                resolvedRowNumber,
-                                resolvedColumnNumber,
-                                seat.getId()
-                        );
+        boolean duplicated = seatRepository.existsByRowNumberAndColumnNumberAndIdNot(
+                resolvedRowNumber,
+                resolvedColumnNumber,
+                seat.getId()
+        );
 
         if (duplicated) {
-            throw new ConcertException(
-                    ConcertErrorCode
-                            .DUPLICATE_SEAT_POSITION
-            );
+            throw new ConcertException(ConcertErrorCode.DUPLICATE_SEAT_POSITION);
         }
     }
 
-    private SeatGrade resolveGrade(
-            String grade
-    ) {
+    private SeatGrade resolveGrade(String grade) {
         if (!hasText(grade)) {
             return null;
         }
@@ -204,55 +131,30 @@ public class UpdatePerformanceSeatService {
         return SeatGrade.from(grade.trim());
     }
 
-    private PerformanceSeatStatus resolveStatus(
-            String status
-    ) {
+    private PerformanceSeatStatus resolveStatus(String status) {
         if (!hasText(status)) {
             return null;
         }
 
-        try {
-            PerformanceSeatStatus resolvedStatus =
-                    PerformanceSeatStatus.valueOf(
-                            status.trim()
-                                    .toUpperCase(Locale.ROOT)
-                    );
+        PerformanceSeatStatus resolvedStatus = PerformanceSeatStatus.from(status);
 
-            if (resolvedStatus !=
-                    PerformanceSeatStatus.AVAILABLE
-                    && resolvedStatus !=
-                    PerformanceSeatStatus.BLOCKED) {
-                throw new PerformanceException(
-                        PerformanceErrorCode
-                                .INVALID_ADMIN_SEAT_STATUS
-                );
-            }
-
-            return resolvedStatus;
-        } catch (IllegalArgumentException exception) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .INVALID_ADMIN_SEAT_STATUS
-            );
+        if (resolvedStatus != PerformanceSeatStatus.AVAILABLE
+                && resolvedStatus != PerformanceSeatStatus.BLOCKED) {
+            throw new PerformanceException(PerformanceErrorCode.INVALID_ADMIN_SEAT_STATUS);
         }
+
+        return resolvedStatus;
     }
 
-    private String normalizeSeatNumber(
-            String seatNumber
-    ) {
+    private String normalizeSeatNumber(String seatNumber) {
         if (seatNumber == null) {
             return null;
         }
 
-        String normalized =
-                seatNumber.trim()
-                        .toUpperCase(Locale.ROOT);
+        String normalized = seatNumber.trim().toUpperCase(Locale.ROOT);
 
         if (normalized.isBlank()) {
-            throw new ConcertException(
-                    ConcertErrorCode
-                            .SEAT_NUMBER_REQUIRED
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_REQUIRED);
         }
 
         return normalized;
@@ -262,14 +164,9 @@ public class UpdatePerformanceSeatService {
         return value != null && !value.isBlank();
     }
 
-    private void validatePerformanceSeatId(
-            Long performanceSeatId
-    ) {
-        if (performanceSeatId == null
-                || performanceSeatId <= 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_FOUND
-            );
+    private void validatePerformanceSeatId(Long performanceSeatId) {
+        if (performanceSeatId == null || performanceSeatId <= 0) {
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_FOUND);
         }
     }
 }

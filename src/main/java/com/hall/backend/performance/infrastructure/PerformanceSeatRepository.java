@@ -11,77 +11,64 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface PerformanceSeatRepository
-        extends JpaRepository<PerformanceSeat, Long> {
+public interface PerformanceSeatRepository extends JpaRepository<PerformanceSeat, Long> {
 
-    boolean existsByPerformanceId(
-            Long performanceId
+    boolean existsByPerformanceId(Long performanceId);
+
+    @Query("""
+            SELECT ps
+            FROM PerformanceSeat ps
+            JOIN FETCH ps.seat s
+            WHERE ps.performance.id = :performanceId
+            ORDER BY
+                s.rowNumber ASC,
+                s.columnNumber ASC,
+                ps.id ASC
+            """)
+    List<PerformanceSeat> findAllByPerformanceId(
+            @Param("performanceId") Long performanceId
     );
 
-    boolean existsByPerformanceIdAndSeatId(
-            Long performanceId,
-            Long seatId
+    @Query("""
+            SELECT ps
+            FROM PerformanceSeat ps
+            JOIN FETCH ps.seat s
+            WHERE ps.performance.id = :performanceId
+              AND ps.status = :status
+            ORDER BY
+                s.rowNumber ASC,
+                s.columnNumber ASC,
+                ps.id ASC
+            """)
+    List<PerformanceSeat> findAllByPerformanceIdAndStatus(
+            @Param("performanceId") Long performanceId,
+            @Param("status") PerformanceSeatStatus status
     );
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select ps
-            from PerformanceSeat ps
-            join fetch ps.performance
-            join fetch ps.seat
-            where ps.id in :ids
-            order by ps.id
+            SELECT ps
+            FROM PerformanceSeat ps
+            JOIN FETCH ps.performance
+            JOIN FETCH ps.seat
+            WHERE ps.id IN :ids
+            ORDER BY ps.id ASC
             """)
     List<PerformanceSeat> findAllByIdInForUpdate(
             @Param("ids") List<Long> ids
     );
 
-    @Query("""
-            select ps
-            from PerformanceSeat ps
-            join fetch ps.seat s
-            where ps.performance.id = :performanceId
-              and ps.status = :status
-            order by
-                s.rowNumber asc,
-                s.columnNumber asc,
-                ps.id asc
-            """)
-    List<PerformanceSeat> findAllByPerformanceIdAndStatus(
-            @Param("performanceId")
-            Long performanceId,
-
-            @Param("status")
-            PerformanceSeatStatus status
-    );
-
-    @Query("""
-            select ps
-            from PerformanceSeat ps
-            join fetch ps.seat s
-            where ps.performance.id = :performanceId
-            order by
-                s.rowNumber asc,
-                s.columnNumber asc,
-                ps.id asc
-            """)
-    List<PerformanceSeat> findAllByPerformanceId(
-            @Param("performanceId")
-            Long performanceId
-    );
-
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select ps
-            from PerformanceSeat ps
-            join fetch ps.performance p
-            join fetch p.concert
-            join fetch ps.seat
-            where ps.id = :performanceSeatId
+            SELECT ps
+            FROM PerformanceSeat ps
+            JOIN FETCH ps.performance p
+            JOIN FETCH p.concert
+            JOIN FETCH ps.seat
+            WHERE ps.id = :performanceSeatId
             """)
     Optional<PerformanceSeat> findByIdForUpdate(
-            @Param("performanceSeatId")
-            Long performanceSeatId
+            @Param("performanceSeatId") Long performanceSeatId
     );
 
     @Modifying(
@@ -89,21 +76,22 @@ public interface PerformanceSeatRepository
             clearAutomatically = true
     )
     @Query("""
-            delete from PerformanceSeat ps
-            where ps.performance.concert.id = :concertId
+            DELETE FROM PerformanceSeat ps
+            WHERE ps.performance.id = :performanceId
             """)
-    int deleteAllByConcertId(
-            @Param("concertId")
-            Long concertId
+    int deleteAllByPerformanceId(
+            @Param("performanceId") Long performanceId
     );
 
-    @Modifying(flushAutomatically = true)
+    @Modifying(
+            flushAutomatically = true,
+            clearAutomatically = true
+    )
     @Query("""
-        delete from PerformanceSeat ps
-        where ps.performance.id = :performanceId
-        """)
-    int deleteAllByPerformanceId(
-            @Param("performanceId")
-            Long performanceId
+            DELETE FROM PerformanceSeat ps
+            WHERE ps.performance.concert.id = :concertId
+            """)
+    int deleteAllByConcertId(
+            @Param("concertId") Long concertId
     );
 }
