@@ -108,12 +108,6 @@ public class Performance {
         }
     }
 
-    private static void validatePositiveTicketLimit(int maxTicketsPerMember) {
-        if (maxTicketsPerMember <= 0) {
-            throw new PerformanceException(PerformanceErrorCode.INVALID_MAX_TICKETS_PER_MEMBER);
-        }
-    }
-
     private static void validateConcert(Concert concert) {
         if (concert == null) {
             throw new PerformanceException(PerformanceErrorCode.CONCERT_REQUIRED);
@@ -194,9 +188,15 @@ public class Performance {
         }
     }
 
-    public void updateMaxTicketsPerMember(int maxTicketsPerMember) {
-        validatePositiveTicketLimit(maxTicketsPerMember);
-        this.maxTicketsPerMember = maxTicketsPerMember;
+    public void updateMaxTicketsPerMember(
+            int maxTicketsPerMember
+    ) {
+        validateMaxTicketsPerMember(
+                maxTicketsPerMember
+        );
+
+        this.maxTicketsPerMember =
+                maxTicketsPerMember;
     }
 
     public void validateReservationLimit(
@@ -215,6 +215,67 @@ public class Performance {
                     PerformanceErrorCode.RESERVATION_LIMIT_EXCEEDED
             );
         }
+    }
+
+    public void updateInformation(
+            LocalDateTime startsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt,
+            Integer maxTicketsPerMember
+    ) {
+        LocalDateTime updatedStartsAt =
+                startsAt == null
+                        ? this.startsAt
+                        : startsAt;
+
+        LocalDateTime updatedReservationOpensAt =
+                reservationOpensAt == null
+                        ? this.reservationOpensAt
+                        : reservationOpensAt;
+
+        LocalDateTime updatedReservationClosesAt =
+                reservationClosesAt == null
+                        ? this.reservationClosesAt
+                        : reservationClosesAt;
+
+        int updatedMaxTicketsPerMember =
+                maxTicketsPerMember == null
+                        ? this.maxTicketsPerMember
+                        : maxTicketsPerMember;
+
+        validateStartsAt(updatedStartsAt);
+        validateReservationOpensAt(updatedReservationOpensAt);
+        validateReservationClosesAt(updatedReservationClosesAt);
+        validateReservationPeriod(
+                updatedStartsAt,
+                updatedReservationOpensAt,
+                updatedReservationClosesAt
+        );
+        validateMaxTicketsPerMember(
+                updatedMaxTicketsPerMember
+        );
+
+        this.startsAt = updatedStartsAt;
+        this.reservationOpensAt =
+                updatedReservationOpensAt;
+        this.reservationClosesAt =
+                updatedReservationClosesAt;
+        this.maxTicketsPerMember =
+                updatedMaxTicketsPerMember;
+    }
+
+    public void cancelByAdmin() {
+        if (status == PerformanceStatus.CANCELLED) {
+            return;
+        }
+
+        if (status == PerformanceStatus.COMPLETED) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
+            );
+        }
+
+        this.status = PerformanceStatus.CANCELLED;
     }
 }
 

@@ -96,4 +96,14 @@ public interface PerformanceSeatRepository
             @Param("concertId")
             Long concertId
     );
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+        delete from PerformanceSeat ps
+        where ps.performance.id = :performanceId
+        """)
+    int deleteAllByPerformanceId(
+            @Param("performanceId")
+            Long performanceId
+    );
 }

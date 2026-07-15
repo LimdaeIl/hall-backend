@@ -3,6 +3,7 @@ package com.hall.backend.concert.presentation;
 import com.hall.backend.common.response.ApiResponse;
 import com.hall.backend.common.response.PageResponse;
 import com.hall.backend.concert.application.CreateConcertService;
+import com.hall.backend.concert.application.CreateSeatService;
 import com.hall.backend.concert.application.DeleteConcertService;
 import com.hall.backend.concert.application.GetAdminConcertsService;
 import com.hall.backend.concert.application.UpdateConcertService;
@@ -10,9 +11,11 @@ import com.hall.backend.concert.application.UpdateConcertStatusService;
 import com.hall.backend.concert.domain.ConcertStatus;
 import com.hall.backend.concert.presentation.dto.request.ConcertSortType;
 import com.hall.backend.concert.presentation.dto.request.CreateConcertRequest;
+import com.hall.backend.concert.presentation.dto.request.CreateSeatRequest;
 import com.hall.backend.concert.presentation.dto.request.UpdateConcertRequest;
 import com.hall.backend.concert.presentation.dto.request.UpdateConcertStatusRequest;
 import com.hall.backend.concert.presentation.dto.response.CreateConcertResponse;
+import com.hall.backend.concert.presentation.dto.response.CreateSeatResponse;
 import com.hall.backend.concert.presentation.dto.response.GetAdminConcertsResponse;
 import com.hall.backend.concert.presentation.dto.response.UpdateConcertResponse;
 import jakarta.validation.Valid;
@@ -31,44 +34,58 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/admin/concerts")
+@RequestMapping("/api/v1/admin")
 @RestController
 public class ConcertAdminController {
 
-    private final CreateConcertService createConcertService;
-    private final UpdateConcertService updateConcertService;
-    private final UpdateConcertStatusService
-            updateConcertStatusService;
+    private final CreateConcertService
+            createConcertService;
+
     private final GetAdminConcertsService
             getAdminConcertsService;
-    private final DeleteConcertService deleteConcertService;
+
+    private final UpdateConcertService
+            updateConcertService;
+
+    private final UpdateConcertStatusService
+            updateConcertStatusService;
+
+    private final DeleteConcertService
+            deleteConcertService;
+
+    private final CreateSeatService
+            createSeatService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/create")
+    @PostMapping("/concerts")
     public ResponseEntity<
             ApiResponse<CreateConcertResponse>
-            > create(
+            > createConcert(
             @Valid
             @RequestBody
             CreateConcertRequest request
     ) {
         CreateConcertResponse response =
-                createConcertService.create(request);
+                createConcertService.create(
+                        request
+                );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(
                         ApiResponse.created(
-                                "콘서트: 콘서트 생성에 성공했습니다.",
+                                "콘서트 생성: 콘서트 생성에 성공했습니다.",
                                 response
                         )
                 );
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
+    @GetMapping("/concerts")
     public ResponseEntity<
-            ApiResponse<PageResponse<GetAdminConcertsResponse>>
+            ApiResponse<
+                    PageResponse<GetAdminConcertsResponse>
+                    >
             > getConcerts(
             @RequestParam(required = false)
             String title,
@@ -107,7 +124,7 @@ public class ConcertAdminController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{concertId}")
+    @PatchMapping("/concerts/{concertId}")
     public ResponseEntity<
             ApiResponse<UpdateConcertResponse>
             > updateConcert(
@@ -132,7 +149,7 @@ public class ConcertAdminController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/{concertId}/status")
+    @PatchMapping("/concerts/{concertId}/status")
     public ResponseEntity<
             ApiResponse<UpdateConcertResponse>
             > updateConcertStatus(
@@ -157,11 +174,14 @@ public class ConcertAdminController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{concertId}")
-    public ResponseEntity<ApiResponse<Void>> deleteConcert(
+    @DeleteMapping("/concerts/{concertId}")
+    public ResponseEntity<ApiResponse<Void>>
+    deleteConcert(
             @PathVariable Long concertId
     ) {
-        deleteConcertService.delete(concertId);
+        deleteConcertService.delete(
+                concertId
+        );
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -169,5 +189,29 @@ public class ConcertAdminController {
                         null
                 )
         );
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/seats")
+    public ResponseEntity<
+            ApiResponse<CreateSeatResponse>
+            > createSeat(
+            @Valid
+            @RequestBody
+            CreateSeatRequest request
+    ) {
+        CreateSeatResponse response =
+                createSeatService.create(
+                        request
+                );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        ApiResponse.created(
+                                "좌석 생성: 공연장 좌석 생성에 성공했습니다.",
+                                response
+                        )
+                );
     }
 }

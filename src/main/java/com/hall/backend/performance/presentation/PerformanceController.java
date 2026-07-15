@@ -2,7 +2,9 @@ package com.hall.backend.performance.presentation;
 
 import com.hall.backend.common.response.ApiResponse;
 import com.hall.backend.performance.application.GetAvailablePerformanceSeatsService;
+import com.hall.backend.performance.application.GetPerformanceDetailService;
 import com.hall.backend.performance.presentation.dto.response.GetAvailablePerformanceSeatsResponse;
+import com.hall.backend.performance.presentation.dto.response.GetPerformanceDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,8 @@ public class PerformanceController {
 
     private final GetAvailablePerformanceSeatsService
             getAvailablePerformanceSeatsService;
+    private final GetPerformanceDetailService
+            getPerformanceDetailService;
 
     @GetMapping("/{performanceId}/seats")
     public ResponseEntity<ApiResponse<GetAvailablePerformanceSeatsResponse>> getAvailableSeats(
@@ -32,6 +36,23 @@ public class PerformanceController {
                 )
         );
     }
+    @GetMapping("/{performanceId}")
+    public ResponseEntity<
+            ApiResponse<GetPerformanceDetailResponse>
+            > getPerformanceDetail(
+            @PathVariable Long performanceId
+    ) {
+        GetPerformanceDetailResponse response =
+                getPerformanceDetailService.getDetail(
+                        performanceId
+                );
 
+        return ResponseEntity.ok(
+                ApiResponse.ok(
+                        "공연 상세 조회에 성공했습니다.",
+                        response
+                )
+        );
+    }
 
 }
