@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reservations")
 @RestController
-public class PaymentController {
+public class PaymentController implements PaymentControllerDocs {
 
     private final PaymentService paymentService;
 

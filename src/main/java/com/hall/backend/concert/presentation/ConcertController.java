@@ -9,6 +9,7 @@ import com.hall.backend.concert.presentation.dto.request.ConcertSortType;
 import com.hall.backend.concert.presentation.dto.response.GetConcertDetailResponse;
 import com.hall.backend.concert.presentation.dto.response.GetConcertPerformancesResponse;
 import com.hall.backend.concert.presentation.dto.response.GetConcertsResponse;
+import com.hall.backend.member.presentation.MemberControllerDocs;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/concerts")
 @RestController
-public class ConcertController {
+public class ConcertController implements ConcertControllerDocs {
 
     private final GetConcertsService getConcertsService;
     private final GetConcertDetailService getConcertDetailService;

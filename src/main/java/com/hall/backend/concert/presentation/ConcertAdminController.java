@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @RestController
-public class ConcertAdminController {
+public class ConcertAdminController implements  ConcertAdminControllerDocs {
 
     private final CreateConcertService
             createConcertService;

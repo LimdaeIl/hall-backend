@@ -8,3 +8,22 @@ spring:
 
   profiles:
     active: dev
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    try-it-out-enabled: true
+    doc-expansion: none
+    persist-authorization: true
+
+  packages-to-scan: com.hall.backend
+  paths-to-match:
+    - /api/**

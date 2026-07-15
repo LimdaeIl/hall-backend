@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin/members")
 @RestController
-public class MemberAdminController {
+public class MemberAdminController implements MemberAdminControllerDocs {
 
     private final UpdateRoleService updateRoleService;
 
