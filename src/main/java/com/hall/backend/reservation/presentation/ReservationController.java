@@ -33,39 +33,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ReservationController implements ReservationControllerDocs {
 
-    private final CreateReservationService
-            createReservationService;
+    private final CreateReservationService createReservationService;
+    private final GetReservationDetailService getReservationDetailService;
+    private final CancelReservationService cancelReservationService;
+    private final GetMyReservationsService getMyReservationsService;
 
-    private final GetReservationDetailService
-            getReservationDetailService;
-
-    private final CancelReservationService
-            cancelReservationService;
-
-    private final GetMyReservationsService
-            getMyReservationsService;
-
-    @PostMapping(
-            "/performances/{performanceId}/reservations"
-    )
-    public ResponseEntity<
-            ApiResponse<CreateReservationResponse>
-            > createReservation(
+    @PostMapping("/performances/{performanceId}/reservations")
+    public ResponseEntity<ApiResponse<CreateReservationResponse>> createReservation(
             @PathVariable Long performanceId,
-
-            @AuthenticationPrincipal
-            MemberPrincipal principal,
-
-            @Valid
-            @RequestBody
-            CreateReservationRequest request
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @Valid @RequestBody CreateReservationRequest request
     ) {
         CreateReservationResponse response =
-                createReservationService.create(
-                        performanceId,
-                        principal,
-                        request
-                );
+                createReservationService.create(performanceId, principal, request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -77,23 +57,13 @@ public class ReservationController implements ReservationControllerDocs {
                 );
     }
 
-    @GetMapping(
-            "/reservations/{reservationId}"
-    )
-    public ResponseEntity<
-            ApiResponse<GetReservationDetailResponse>
-            > getReservation(
+    @GetMapping("/reservations/{reservationId}")
+    public ResponseEntity<ApiResponse<GetReservationDetailResponse>> getReservation(
             @PathVariable Long reservationId,
-
-            @AuthenticationPrincipal
-            MemberPrincipal principal
+            @AuthenticationPrincipal MemberPrincipal principal
     ) {
         GetReservationDetailResponse response =
-                getReservationDetailService
-                        .getReservation(
-                                reservationId,
-                                principal
-                        );
+                getReservationDetailService.getReservation(reservationId, principal);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -103,22 +73,13 @@ public class ReservationController implements ReservationControllerDocs {
         );
     }
 
-    @PatchMapping(
-            "/reservations/{reservationId}/cancel"
-    )
-    public ResponseEntity<
-            ApiResponse<CancelReservationResponse>
-            > cancelReservation(
+    @PatchMapping("/reservations/{reservationId}/cancel")
+    public ResponseEntity<ApiResponse<CancelReservationResponse>> cancelReservation(
             @PathVariable Long reservationId,
-
-            @AuthenticationPrincipal
-            MemberPrincipal principal
+            @AuthenticationPrincipal MemberPrincipal principal
     ) {
         CancelReservationResponse response =
-                cancelReservationService.cancel(
-                        reservationId,
-                        principal
-                );
+                cancelReservationService.cancel(reservationId, principal);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -128,28 +89,13 @@ public class ReservationController implements ReservationControllerDocs {
         );
     }
 
-    @GetMapping(
-            "/members/me/reservations"
-    )
-    public ResponseEntity<
-            ApiResponse<
-                    PageResponse<GetMyReservationsResponse>
-                    >
-            > getMyReservations(
-            @AuthenticationPrincipal
-            MemberPrincipal principal,
-
-            @RequestParam(required = false)
-            ReservationStatus status,
-
-            @RequestParam(defaultValue = "0")
-            Integer page,
-
-            @RequestParam(defaultValue = "20")
-            Integer size,
-
-            @RequestParam(defaultValue = "LATEST")
-            ReservationSortType sort
+    @GetMapping("/members/me/reservations")
+    public ResponseEntity<ApiResponse<PageResponse<GetMyReservationsResponse>>> getMyReservations(
+            @AuthenticationPrincipal MemberPrincipal principal,
+            @RequestParam(required = false) ReservationStatus status,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "LATEST") ReservationSortType sort
     ) {
         PageResponse<GetMyReservationsResponse> response =
                 getMyReservationsService.getReservations(

@@ -11,9 +11,7 @@ public record DeletePerformanceSeatResponse(
         PerformanceSeatStatus status
 ) {
 
-    public static DeletePerformanceSeatResponse from(
-            PerformanceSeat performanceSeat
-    ) {
+    public static DeletePerformanceSeatResponse from(PerformanceSeat performanceSeat) {
         return new DeletePerformanceSeatResponse(
                 performanceSeat.getId(),
                 performanceSeat.getPerformance().getId(),

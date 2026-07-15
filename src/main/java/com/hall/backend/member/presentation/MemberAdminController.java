@@ -5,6 +5,7 @@ import com.hall.backend.member.application.UpdateRoleService;
 import com.hall.backend.member.presentation.dto.response.GetMeResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,7 @@ public class MemberAdminController implements MemberAdminControllerDocs {
 
     private final UpdateRoleService updateRoleService;
 
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{memberId}/role")
     public ResponseEntity<ApiResponse<GetMeResponse>> updateRole(
             @PathVariable Long memberId

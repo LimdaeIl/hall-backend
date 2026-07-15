@@ -22,52 +22,28 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ReservationAdminController implements ReservationAdminControllerDocs {
 
-    private final GetAdminReservationsService
-            getAdminReservationsService;
+    private final GetAdminReservationsService getAdminReservationsService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<
-            ApiResponse<PageResponse<GetAdminReservationsResponse>>
-            > getReservations(
-            @RequestParam(required = false)
-            Long memberId,
+    public ResponseEntity<ApiResponse<PageResponse<GetAdminReservationsResponse>>> getReservations(
+            @RequestParam(required = false) Long memberId,
+            @RequestParam(required = false) String memberEmail,
+            @RequestParam(required = false) Long concertId,
+            @RequestParam(required = false) Long performanceId,
+            @RequestParam(required = false) ReservationStatus reservationStatus,
+            @RequestParam(required = false) PaymentStatus paymentStatus,
 
             @RequestParam(required = false)
-            String memberEmail,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
 
             @RequestParam(required = false)
-            Long concertId,
-
-            @RequestParam(required = false)
-            Long performanceId,
-
-            @RequestParam(required = false)
-            ReservationStatus reservationStatus,
-
-            @RequestParam(required = false)
-            PaymentStatus paymentStatus,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE
-            )
-            LocalDate createdFrom,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(
-                    iso = DateTimeFormat.ISO.DATE
-            )
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate createdTo,
 
-            @RequestParam(defaultValue = "0")
-            Integer page,
-
-            @RequestParam(defaultValue = "20")
-            Integer size,
-
-            @RequestParam(defaultValue = "LATEST")
-            AdminReservationSortType sort
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "LATEST") AdminReservationSortType sort
     ) {
         PageResponse<GetAdminReservationsResponse> response =
                 getAdminReservationsService

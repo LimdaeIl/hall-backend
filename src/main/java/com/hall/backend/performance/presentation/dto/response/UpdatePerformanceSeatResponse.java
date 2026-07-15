@@ -16,9 +16,7 @@ public record UpdatePerformanceSeatResponse(
         Long version
 ) {
 
-    public static UpdatePerformanceSeatResponse from(
-            PerformanceSeat performanceSeat
-    ) {
+    public static UpdatePerformanceSeatResponse from(PerformanceSeat performanceSeat) {
         return new UpdatePerformanceSeatResponse(
                 performanceSeat.getId(),
                 performanceSeat.getPerformance().getId(),

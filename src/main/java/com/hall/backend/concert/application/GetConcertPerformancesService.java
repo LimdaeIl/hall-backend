@@ -36,21 +36,14 @@ public class GetConcertPerformancesService {
     private final PerformanceRepository performanceRepository;
 
     @Transactional(readOnly = true)
-    public List<GetConcertPerformancesResponse> getPerformances(
-            Long concertId
-    ) {
+    public List<GetConcertPerformancesResponse> getPerformances(Long concertId) {
         validateConcertId(concertId);
 
-        boolean concertExists =
-                concertRepository.findByIdAndStatusIn(
-                        concertId,
-                        MEMBER_VISIBLE_CONCERT_STATUSES
-                ).isPresent();
+        boolean concertExists = concertRepository
+                .findByIdAndStatusIn(concertId, MEMBER_VISIBLE_CONCERT_STATUSES).isPresent();
 
         if (!concertExists) {
-            throw new ConcertException(
-                    ConcertErrorCode.CONCERT_NOT_FOUND
-            );
+            throw new ConcertException(ConcertErrorCode.CONCERT_NOT_FOUND);
         }
 
         return performanceRepository.findConcertPerformances(

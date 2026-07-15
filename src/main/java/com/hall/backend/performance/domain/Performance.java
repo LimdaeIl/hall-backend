@@ -49,22 +49,13 @@ public class Performance {
     @Column(name = "status", nullable = false, length = 30)
     private PerformanceStatus status;
 
-    private Performance(
-            Concert concert,
-            LocalDateTime startsAt,
-            LocalDateTime reservationOpensAt,
-            LocalDateTime reservationClosesAt,
-            int maxTicketsPerMember
-    ) {
+    private Performance(Concert concert, LocalDateTime startsAt, LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt, int maxTicketsPerMember) {
         validateConcert(concert);
         validateStartsAt(startsAt);
         validateReservationOpensAt(reservationOpensAt);
         validateReservationClosesAt(reservationClosesAt);
-        validateReservationPeriod(
-                startsAt,
-                reservationOpensAt,
-                reservationClosesAt
-        );
+        validateReservationPeriod(startsAt, reservationOpensAt, reservationClosesAt);
         validateMaxTicketsPerMember(maxTicketsPerMember);
 
         this.concert = concert;
@@ -78,13 +69,8 @@ public class Performance {
     public static Performance create(Concert concert, LocalDateTime startsAt,
             LocalDateTime reservationOpensAt, LocalDateTime reservationClosesAt,
             int maxTicketsPerMember) {
-        return new Performance(
-                concert,
-                startsAt,
-                reservationOpensAt,
-                reservationClosesAt,
-                maxTicketsPerMember
-        );
+        return new Performance(concert, startsAt, reservationOpensAt, reservationClosesAt,
+                maxTicketsPerMember);
     }
 
     private static void validateMaxTicketsPerMember(int maxTicketsPerMember) {
@@ -166,9 +152,7 @@ public class Performance {
         if (status != PerformanceStatus.PREPARING
                 && status != PerformanceStatus.OPEN
                 && status != PerformanceStatus.SOLD_OUT) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
 
         this.status = PerformanceStatus.CANCELLED;
@@ -188,80 +172,45 @@ public class Performance {
         }
     }
 
-    public void updateMaxTicketsPerMember(
-            int maxTicketsPerMember
-    ) {
-        validateMaxTicketsPerMember(
-                maxTicketsPerMember
-        );
-
-        this.maxTicketsPerMember =
-                maxTicketsPerMember;
-    }
-
-    public void validateReservationLimit(
-            long existingTicketCount,
-            int requestedTicketCount
-    ) {
+    public void validateReservationLimit(long existingTicketCount, int requestedTicketCount) {
         if (requestedTicketCount <= 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_TICKET_COUNT
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_TICKET_COUNT);
         }
 
-        if (existingTicketCount + requestedTicketCount
-                > maxTicketsPerMember) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.RESERVATION_LIMIT_EXCEEDED
-            );
+        if (existingTicketCount + requestedTicketCount > maxTicketsPerMember) {
+            throw new PerformanceException(PerformanceErrorCode.RESERVATION_LIMIT_EXCEEDED);
         }
     }
 
-    public void updateInformation(
-            LocalDateTime startsAt,
-            LocalDateTime reservationOpensAt,
-            LocalDateTime reservationClosesAt,
-            Integer maxTicketsPerMember
-    ) {
-        LocalDateTime updatedStartsAt =
-                startsAt == null
-                        ? this.startsAt
-                        : startsAt;
+    public void updateInformation(LocalDateTime startsAt, LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt, Integer maxTicketsPerMember) {
+        LocalDateTime updatedStartsAt = startsAt == null
+                ? this.startsAt
+                : startsAt;
 
-        LocalDateTime updatedReservationOpensAt =
-                reservationOpensAt == null
-                        ? this.reservationOpensAt
-                        : reservationOpensAt;
+        LocalDateTime updatedReservationOpensAt = reservationOpensAt == null
+                ? this.reservationOpensAt
+                : reservationOpensAt;
 
-        LocalDateTime updatedReservationClosesAt =
-                reservationClosesAt == null
-                        ? this.reservationClosesAt
-                        : reservationClosesAt;
+        LocalDateTime updatedReservationClosesAt = reservationClosesAt == null
+                ? this.reservationClosesAt
+                : reservationClosesAt;
 
-        int updatedMaxTicketsPerMember =
-                maxTicketsPerMember == null
-                        ? this.maxTicketsPerMember
-                        : maxTicketsPerMember;
+        int updatedMaxTicketsPerMember = maxTicketsPerMember == null
+                ? this.maxTicketsPerMember
+                : maxTicketsPerMember;
 
         validateStartsAt(updatedStartsAt);
         validateReservationOpensAt(updatedReservationOpensAt);
         validateReservationClosesAt(updatedReservationClosesAt);
-        validateReservationPeriod(
-                updatedStartsAt,
-                updatedReservationOpensAt,
-                updatedReservationClosesAt
-        );
-        validateMaxTicketsPerMember(
-                updatedMaxTicketsPerMember
-        );
+        validateReservationPeriod(updatedStartsAt, updatedReservationOpensAt,
+                updatedReservationClosesAt);
+        validateMaxTicketsPerMember(updatedMaxTicketsPerMember);
 
         this.startsAt = updatedStartsAt;
-        this.reservationOpensAt =
-                updatedReservationOpensAt;
-        this.reservationClosesAt =
-                updatedReservationClosesAt;
-        this.maxTicketsPerMember =
-                updatedMaxTicketsPerMember;
+        this.reservationOpensAt = updatedReservationOpensAt;
+        this.reservationClosesAt = updatedReservationClosesAt;
+        this.maxTicketsPerMember = updatedMaxTicketsPerMember;
     }
 
     public void cancelByAdmin() {
@@ -270,9 +219,7 @@ public class Performance {
         }
 
         if (status == PerformanceStatus.COMPLETED) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_PERFORMANCE_STATUS);
         }
 
         this.status = PerformanceStatus.CANCELLED;

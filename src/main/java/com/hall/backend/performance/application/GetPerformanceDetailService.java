@@ -16,49 +16,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GetPerformanceDetailService {
 
-    private final PerformanceRepository
-            performanceRepository;
+    private final PerformanceRepository performanceRepository;
 
-    private final PerformanceSeatRepository
-            performanceSeatRepository;
+    private final PerformanceSeatRepository performanceSeatRepository;
 
     @Transactional(readOnly = true)
-    public GetPerformanceDetailResponse getDetail(
-            Long performanceId
-    ) {
+    public GetPerformanceDetailResponse getDetail(Long performanceId) {
         validatePerformanceId(performanceId);
 
-        Performance performance =
-                performanceRepository
-                        .findByIdWithConcert(performanceId)
-                        .orElseThrow(
-                                () -> new PerformanceException(
-                                        PerformanceErrorCode
-                                                .PERFORMANCE_NOT_FOUND
-                                )
-                        );
+        Performance performance = performanceRepository.findByIdWithConcert(performanceId)
+                .orElseThrow(
+                        () -> new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND));
 
-        List<PerformanceSeat> performanceSeats =
-                performanceSeatRepository
-                        .findAllByPerformanceId(
-                                performanceId
-                        );
+        List<PerformanceSeat> performanceSeats = performanceSeatRepository.findAllByPerformanceId(performanceId);
 
-        return GetPerformanceDetailResponse.of(
-                performance,
-                performanceSeats
-        );
+        return GetPerformanceDetailResponse.of(performance, performanceSeats);
     }
 
-    private void validatePerformanceId(
-            Long performanceId
-    ) {
-        if (performanceId == null
-                || performanceId <= 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .PERFORMANCE_NOT_FOUND
-            );
+    private void validatePerformanceId(Long performanceId) {
+        if (performanceId == null || performanceId <= 0) {
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND);
         }
     }
 }

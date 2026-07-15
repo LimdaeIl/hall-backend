@@ -25,38 +25,22 @@ public class GetAvailablePerformanceSeatsService {
     private final Clock clock;
 
     @Transactional(readOnly = true)
-    public GetAvailablePerformanceSeatsResponse getAvailableSeats(
-            Long performanceId
-    ) {
+    public GetAvailablePerformanceSeatsResponse getAvailableSeats(Long performanceId) {
         Performance performance = performanceRepository
                 .findById(performanceId)
-                .orElseThrow(() ->
-                        new PerformanceException(
-                                PerformanceErrorCode.PERFORMANCE_NOT_FOUND
-                        )
-                );
+                .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND));
 
         LocalDateTime now = LocalDateTime.now(clock);
-
         performance.validateReservable(now);
 
-        List<PerformanceSeat> performanceSeats =
-                performanceSeatRepository
-                        .findAllByPerformanceIdAndStatus(
-                                performanceId,
-                                PerformanceSeatStatus.AVAILABLE
-                        );
+        List<PerformanceSeat> performanceSeats = performanceSeatRepository
+                        .findAllByPerformanceIdAndStatus(performanceId, PerformanceSeatStatus.AVAILABLE);
 
         List<GetAvailablePerformanceSeatResponse> seats =
                 performanceSeats.stream()
-                        .map(
-                                GetAvailablePerformanceSeatResponse::from
-                        )
+                        .map(GetAvailablePerformanceSeatResponse::from)
                         .toList();
 
-        return GetAvailablePerformanceSeatsResponse.of(
-                performance,
-                seats
-        );
+        return GetAvailablePerformanceSeatsResponse.of(performance, seats);
     }
 }

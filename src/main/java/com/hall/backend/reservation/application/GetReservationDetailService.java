@@ -16,68 +16,33 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GetReservationDetailService {
 
-    private final ReservationRepository
-            reservationRepository;
-
-    private final PaymentRepository
-            paymentRepository;
+    private final ReservationRepository reservationRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional(readOnly = true)
-    public GetReservationDetailResponse getReservation(
-            Long reservationId,
-            MemberPrincipal principal
-    ) {
+    public GetReservationDetailResponse getReservation(Long reservationId,
+            MemberPrincipal principal) {
         validateReservationId(reservationId);
         validatePrincipal(principal);
 
-        Reservation reservation =
-                reservationRepository
-                        .findDetailByIdAndMemberId(
-                                reservationId,
-                                principal.memberId()
-                        )
-                        .orElseThrow(
-                                () -> new ReservationException(
-                                        ReservationErrorCode
-                                                .RESERVATION_NOT_FOUND
-                                )
-                        );
+        Reservation reservation = reservationRepository.findDetailByIdAndMemberId(reservationId,
+                principal.memberId()).orElseThrow(
+                () -> new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND));
 
-        Payment payment =
-                paymentRepository
-                        .findByReservationId(
-                                reservationId
-                        )
-                        .orElse(null);
+        Payment payment = paymentRepository.findByReservationId(reservationId).orElse(null);
 
-        return GetReservationDetailResponse.of(
-                reservation,
-                payment
-        );
+        return GetReservationDetailResponse.of(reservation, payment);
     }
 
-    private void validateReservationId(
-            Long reservationId
-    ) {
-        if (reservationId == null
-                || reservationId <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_NOT_FOUND
-            );
+    private void validateReservationId(Long reservationId) {
+        if (reservationId == null || reservationId <= 0) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND);
         }
     }
 
-    private void validatePrincipal(
-            MemberPrincipal principal
-    ) {
-        if (principal == null
-                || principal.memberId() == null
-                || principal.memberId() <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_NOT_FOUND
-            );
+    private void validatePrincipal(MemberPrincipal principal) {
+        if (principal == null || principal.memberId() == null || principal.memberId() <= 0) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND);
         }
     }
 }

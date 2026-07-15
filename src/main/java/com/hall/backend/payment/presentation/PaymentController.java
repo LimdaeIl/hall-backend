@@ -25,17 +25,12 @@ public class PaymentController implements PaymentControllerDocs {
     private final PaymentService paymentService;
 
     @PostMapping("/{reservationId}/payments")
-    public ResponseEntity<ApiResponse<PaymentResponse>>
-    createPayment(
+    public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
             @AuthenticationPrincipal MemberPrincipal principal,
             @PathVariable Long reservationId,
             @Valid @RequestBody CreatePaymentRequest request
     ) {
-        Payment payment = paymentService.pay(
-                principal.memberId(),
-                reservationId,
-                request.method()
-        );
+        Payment payment = paymentService.pay(principal.memberId(), reservationId, request.method());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

@@ -22,166 +22,90 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CancelReservationService {
 
-    private final ReservationRepository
-            reservationRepository;
-
-    private final PaymentRepository
-            paymentRepository;
-
+    private final ReservationRepository reservationRepository;
+    private final PaymentRepository paymentRepository;
     private final Clock clock;
 
     @Transactional
-    public CancelReservationResponse cancel(
-            Long reservationId,
-            MemberPrincipal principal
-    ) {
+    public CancelReservationResponse cancel(Long reservationId, MemberPrincipal principal) {
         validateReservationId(reservationId);
         validatePrincipal(principal);
 
-        Reservation reservation =
-                reservationRepository
-                        .findByIdAndMemberIdForCancel(
-                                reservationId,
-                                principal.memberId()
-                        )
-                        .orElseThrow(
-                                () -> new ReservationException(
-                                        ReservationErrorCode
-                                                .RESERVATION_NOT_FOUND
-                                )
-                        );
+        Reservation reservation = reservationRepository
+                .findByIdAndMemberIdForCancel(reservationId, principal.memberId())
+                .orElseThrow(
+                        () -> new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND)
+                );
 
-        LocalDateTime now =
-                LocalDateTime.now(clock);
-
-        validateCancellationDeadline(
-                reservation,
-                now
-        );
-
+        LocalDateTime now = LocalDateTime.now(clock);
+        validateCancellationDeadline(reservation, now);
         validateCancellableStatus(reservation);
 
-        Payment payment =
-                paymentRepository
-                        .findByReservationIdForUpdate(
-                                reservationId
-                        )
-                        .orElse(null);
+        Payment payment = paymentRepository.findByReservationIdForUpdate(reservationId)
+                .orElse(null);
 
-        cancelPaymentIfRequired(
-                reservation,
-                payment,
-                now
-        );
-
+        cancelPaymentIfRequired(reservation, payment, now);
         reservation.cancel(now);
 
-        return CancelReservationResponse.of(
-                reservation,
-                payment
-        );
+        return CancelReservationResponse.of(reservation, payment);
     }
 
-    private void cancelPaymentIfRequired(
-            Reservation reservation,
-            Payment payment,
-            LocalDateTime now
-    ) {
-        if (reservation.getStatus()
-                == ReservationStatus.PENDING_PAYMENT) {
+    private void cancelPaymentIfRequired(Reservation reservation, Payment payment,
+            LocalDateTime now) {
+        if (reservation.getStatus() == ReservationStatus.PENDING_PAYMENT) {
             validatePendingReservationPayment(payment);
             return;
         }
 
-        if (reservation.getStatus()
-                == ReservationStatus.COMPLETED) {
+        if (reservation.getStatus() == ReservationStatus.COMPLETED) {
             if (payment == null) {
-                throw new PaymentException(
-                        PaymentErrorCode.PAYMENT_NOT_FOUND
-                );
+                throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND);
             }
 
-            if (payment.getStatus()
-                    != PaymentStatus.COMPLETED) {
-                throw new PaymentException(
-                        PaymentErrorCode
-                                .PAYMENT_NOT_COMPLETED
-                );
+            if (payment.getStatus() != PaymentStatus.COMPLETED) {
+                throw new PaymentException(PaymentErrorCode.PAYMENT_NOT_COMPLETED);
             }
 
             payment.cancel(now);
         }
     }
 
-    private void validatePendingReservationPayment(
-            Payment payment
-    ) {
+    private void validatePendingReservationPayment(Payment payment) {
         if (payment == null) {
             return;
         }
 
-        if (payment.getStatus()
-                == PaymentStatus.COMPLETED) {
-            throw new PaymentException(
-                    PaymentErrorCode
-                            .INVALID_PAYMENT_STATUS
-            );
+        if (payment.getStatus() == PaymentStatus.COMPLETED) {
+            throw new PaymentException(PaymentErrorCode.INVALID_PAYMENT_STATUS);
         }
     }
 
-    private void validateCancellableStatus(
-            Reservation reservation
-    ) {
-        ReservationStatus status =
-                reservation.getStatus();
+    private void validateCancellableStatus(Reservation reservation) {
+        ReservationStatus status = reservation.getStatus();
 
-        if (status != ReservationStatus.PENDING_PAYMENT
-                && status != ReservationStatus.COMPLETED) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_NOT_CANCELLABLE
-            );
+        if (status != ReservationStatus.PENDING_PAYMENT && status != ReservationStatus.COMPLETED) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_CANCELLABLE);
         }
     }
 
-    private void validateCancellationDeadline(
-            Reservation reservation,
-            LocalDateTime now
-    ) {
-        LocalDateTime startsAt =
-                reservation.getPerformance()
-                        .getStartsAt();
+    private void validateCancellationDeadline(Reservation reservation, LocalDateTime now) {
+        LocalDateTime startsAt = reservation.getPerformance().getStartsAt();
 
         if (!now.isBefore(startsAt)) {
             throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_CANCELLATION_DEADLINE_PASSED
-            );
+                    ReservationErrorCode.RESERVATION_CANCELLATION_DEADLINE_PASSED);
         }
     }
 
-    private void validateReservationId(
-            Long reservationId
-    ) {
-        if (reservationId == null
-                || reservationId <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_NOT_FOUND
-            );
+    private void validateReservationId(Long reservationId) {
+        if (reservationId == null || reservationId <= 0) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND);
         }
     }
 
-    private void validatePrincipal(
-            MemberPrincipal principal
-    ) {
-        if (principal == null
-                || principal.memberId() == null
-                || principal.memberId() <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_NOT_FOUND
-            );
+    private void validatePrincipal(MemberPrincipal principal) {
+        if (principal == null || principal.memberId() == null || principal.memberId() <= 0) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND);
         }
     }
 }

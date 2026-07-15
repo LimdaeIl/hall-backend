@@ -15,9 +15,7 @@ public record UpdatePerformanceResponse(
         PerformanceStatus status
 ) {
 
-    public static UpdatePerformanceResponse from(
-            Performance performance
-    ) {
+    public static UpdatePerformanceResponse from(Performance performance) {
         return new UpdatePerformanceResponse(
                 performance.getId(),
                 performance.getConcert().getId(),

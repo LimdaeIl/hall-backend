@@ -32,17 +32,13 @@ public class GetAdminConcertsService {
             Integer size,
             ConcertSortType sortType
     ) {
-        String normalizedTitle =
-                normalizeSearchKeyword(title);
-
-        String normalizedArtist =
-                normalizeSearchKeyword(artist);
+        String normalizedTitle = normalizeSearchKeyword(title);
+        String normalizedArtist = normalizeSearchKeyword(artist);
 
         int resolvedPage = resolvePage(page);
         int resolvedSize = resolveSize(size);
 
-        ConcertSortType resolvedSortType =
-                resolveSortType(sortType);
+        ConcertSortType resolvedSortType = resolveSortType(sortType);
 
         PageRequest pageRequest = PageRequest.of(
                 resolvedPage,
@@ -50,23 +46,17 @@ public class GetAdminConcertsService {
                 resolvedSortType.toSort()
         );
 
-        Page<Concert> concerts =
-                concertRepository.searchForAdmin(
+        Page<Concert> concerts = concertRepository.searchForAdmin(
                         normalizedTitle,
                         normalizedArtist,
                         status,
                         pageRequest
                 );
 
-        return PageResponse.from(
-                concerts,
-                GetAdminConcertsResponse::from
-        );
+        return PageResponse.from(concerts, GetAdminConcertsResponse::from);
     }
 
-    private String normalizeSearchKeyword(
-            String keyword
-    ) {
+    private String normalizeSearchKeyword(String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return null;
         }

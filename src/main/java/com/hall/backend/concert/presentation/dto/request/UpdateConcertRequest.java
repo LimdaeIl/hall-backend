@@ -4,13 +4,13 @@ import jakarta.validation.constraints.Size;
 
 public record UpdateConcertRequest(
 
-        @Size(max = 100)
+        @Size(max = 100, message = "콘서트 제목은 100자를 초과할 수 없습니다.")
         String title,
 
-        @Size(max = 100)
+        @Size(max = 100, message = "아티스트명은 100자를 초과할 수 없습니다.")
         String artist,
 
-        @Size(max = 1000)
+        @Size(max = 1000, message = "콘서트 설명은 1000자를 초과할 수 없습니다.")
         String description
 ) {
 
@@ -20,3 +20,4 @@ public record UpdateConcertRequest(
                         && description == null;
         }
 }
+

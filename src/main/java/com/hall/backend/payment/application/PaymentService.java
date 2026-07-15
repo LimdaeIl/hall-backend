@@ -34,116 +34,59 @@ public class PaymentService {
         validatePaymentMethod(method);
 
         Reservation reservation =
-                reservationRepository
-                        .findByIdForPayment(reservationId)
-                        .orElseThrow(() ->
-                                new ReservationException(
-                                        ReservationErrorCode
-                                                .RESERVATION_NOT_FOUND
-                                )
-                        );
+                reservationRepository.findByIdForPayment(reservationId)
+                        .orElseThrow(() -> new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND));
 
-        validateOwner(
-                reservation,
-                memberId
-        );
+        validateOwner(reservation, memberId);
 
-        Payment existingPayment =
-                paymentRepository
-                        .findByReservationId(reservationId)
-                        .orElse(null);
+        Payment existingPayment = paymentRepository.findByReservationId(reservationId).orElse(null);
 
         if (existingPayment != null) {
-            return handleExistingPayment(
-                    existingPayment
-            );
+            return handleExistingPayment(existingPayment);
         }
 
-        LocalDateTime now =
-                LocalDateTime.now(clock);
+        LocalDateTime now = LocalDateTime.now(clock);
 
-        validatePayableReservation(
-                reservation,
-                now
-        );
-
-        Payment payment = Payment.create(
-                reservation,
-                reservation.getTotalAmount(),
-                method
-        );
-
-        payment.approve(
-                generateTransactionKey(),
-                now
-        );
-
+        validatePayableReservation(reservation, now);
+        Payment payment = Payment.create(reservation, reservation.getTotalAmount(), method);
+        payment.approve(generateTransactionKey(), now);
         reservation.complete(now);
 
         return paymentRepository.save(payment);
     }
 
-    private void validatePayableReservation(
-            Reservation reservation,
-            LocalDateTime now
-    ) {
+    private void validatePayableReservation(Reservation reservation, LocalDateTime now) {
         if (reservation.isExpired(now)) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_EXPIRED
-            );
+            throw new ReservationException(ReservationErrorCode.RESERVATION_EXPIRED);
         }
 
         if (!reservation.isPendingPayment()) {
-            throw new PaymentException(
-                    PaymentErrorCode
-                            .INVALID_RESERVATION_STATUS
-            );
+            throw new PaymentException(PaymentErrorCode.INVALID_RESERVATION_STATUS);
         }
     }
 
-    private void validateOwner(
-            Reservation reservation,
-            Long memberId
-    ) {
+    private void validateOwner(Reservation reservation, Long memberId) {
         if (!reservation.isOwnedBy(memberId)) {
-            throw new PaymentException(
-                    PaymentErrorCode
-                            .PAYMENT_ACCESS_DENIED
-            );
+            throw new PaymentException(PaymentErrorCode.PAYMENT_ACCESS_DENIED);
         }
     }
 
-    private void validatePaymentMethod(
-            PaymentMethod method
+    private void validatePaymentMethod(PaymentMethod method
     ) {
         if (method == null) {
-            throw new PaymentException(
-                    PaymentErrorCode
-                            .PAYMENT_METHOD_REQUIRED
-            );
+            throw new PaymentException(PaymentErrorCode.PAYMENT_METHOD_REQUIRED);
         }
 
         if (method != PaymentMethod.MOCK) {
-            throw new PaymentException(
-                    PaymentErrorCode
-                            .UNSUPPORTED_PAYMENT_METHOD
-            );
+            throw new PaymentException(PaymentErrorCode.UNSUPPORTED_PAYMENT_METHOD);
         }
     }
 
-    private Payment handleExistingPayment(
-            Payment payment
-    ) {
-        if (payment.getStatus()
-                == PaymentStatus.COMPLETED) {
+    private Payment handleExistingPayment(Payment payment) {
+        if (payment.getStatus() == PaymentStatus.COMPLETED) {
             return payment;
         }
-
-        throw new PaymentException(
-                PaymentErrorCode
-                        .PAYMENT_ALREADY_EXISTS
-        );
+        throw new PaymentException(PaymentErrorCode.PAYMENT_ALREADY_EXISTS);
     }
 
     private String generateTransactionKey() {

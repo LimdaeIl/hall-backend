@@ -17,17 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class PerformanceController implements PerformanceControllerDocs {
 
-    private final GetAvailablePerformanceSeatsService
-            getAvailablePerformanceSeatsService;
-    private final GetPerformanceDetailService
-            getPerformanceDetailService;
+    private final GetAvailablePerformanceSeatsService getAvailablePerformanceSeatsService;
+    private final GetPerformanceDetailService getPerformanceDetailService;
 
     @GetMapping("/{performanceId}/seats")
     public ResponseEntity<ApiResponse<GetAvailablePerformanceSeatsResponse>> getAvailableSeats(
             @PathVariable Long performanceId
     ) {
-        GetAvailablePerformanceSeatsResponse response = getAvailablePerformanceSeatsService.getAvailableSeats(
-                performanceId);
+        GetAvailablePerformanceSeatsResponse response =
+                getAvailablePerformanceSeatsService.getAvailableSeats(performanceId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -37,15 +35,11 @@ public class PerformanceController implements PerformanceControllerDocs {
         );
     }
     @GetMapping("/{performanceId}")
-    public ResponseEntity<
-            ApiResponse<GetPerformanceDetailResponse>
-            > getPerformanceDetail(
+    public ResponseEntity<ApiResponse<GetPerformanceDetailResponse>> getPerformanceDetail(
             @PathVariable Long performanceId
     ) {
         GetPerformanceDetailResponse response =
-                getPerformanceDetailService.getDetail(
-                        performanceId
-                );
+                getPerformanceDetailService.getDetail(performanceId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(

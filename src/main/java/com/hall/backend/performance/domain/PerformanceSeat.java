@@ -53,61 +53,30 @@ public class PerformanceSeat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(
-            fetch = FetchType.LAZY,
-            optional = false
-    )
-    @JoinColumn(
-            name = "performance_id",
-            nullable = false
-    )
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "performance_id", nullable = false)
     private Performance performance;
 
-    @ManyToOne(
-            fetch = FetchType.LAZY,
-            optional = false
-    )
-    @JoinColumn(
-            name = "seat_id",
-            nullable = false
-    )
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "grade",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "grade", nullable = false, length = 20)
     private SeatGrade grade;
 
-    @Column(
-            name = "price",
-            nullable = false
-    )
+    @Column(name = "price", nullable = false)
     private long price;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "status",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "status", nullable = false, length = 20)
     private PerformanceSeatStatus status;
 
     @Version
-    @Column(
-            name = "version",
-            nullable = false
-    )
+    @Column(name = "version", nullable = false)
     private Long version;
 
-    private PerformanceSeat(
-            Performance performance,
-            Seat seat,
-            SeatGrade grade,
-            long price
-    ) {
+    private PerformanceSeat(Performance performance, Seat seat, SeatGrade grade, long price) {
         validatePerformance(performance);
         validateSeat(seat);
         validateGrade(grade);
@@ -120,59 +89,32 @@ public class PerformanceSeat {
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
-    public static PerformanceSeat create(
-            Performance performance,
-            Seat seat,
-            long price
-    ) {
+    public static PerformanceSeat create(Performance performance, Seat seat, long price) {
         validateSeat(seat);
-
-        return new PerformanceSeat(
-                performance,
-                seat,
-                seat.getGrade(),
-                price
-        );
+        return new PerformanceSeat(performance, seat, seat.getGrade(), price);
     }
 
-    public static PerformanceSeat create(
-            Performance performance,
-            Seat seat,
-            SeatGrade grade,
-            long price
-    ) {
-        return new PerformanceSeat(
-                performance,
-                seat,
-                grade,
-                price
-        );
+    public static PerformanceSeat create(Performance performance, Seat seat, SeatGrade grade, long price) {
+        return new PerformanceSeat(performance, seat, grade, price);
     }
 
     public boolean isAvailable() {
-        return status ==
-                PerformanceSeatStatus.AVAILABLE;
+        return status == PerformanceSeatStatus.AVAILABLE;
     }
 
     public boolean isHeld() {
-        return status ==
-                PerformanceSeatStatus.HELD;
+        return status == PerformanceSeatStatus.HELD;
     }
 
     public boolean isReserved() {
-        return status ==
-                PerformanceSeatStatus.RESERVED;
+        return status == PerformanceSeatStatus.RESERVED;
     }
 
     public boolean isBlocked() {
-        return status ==
-                PerformanceSeatStatus.BLOCKED;
+        return status == PerformanceSeatStatus.BLOCKED;
     }
 
-    public void updateInformation(
-            SeatGrade grade,
-            Long price
-    ) {
+    public void updateInformation(SeatGrade grade, Long price) {
         validateAdministrativelyEditable();
 
         if (grade != null) {
@@ -186,9 +128,7 @@ public class PerformanceSeat {
         }
     }
 
-    public void changeAdministrativeStatus(
-            PerformanceSeatStatus newStatus
-    ) {
+    public void changeAdministrativeStatus(PerformanceSeatStatus newStatus) {
         validateAdministrativelyEditable();
 
         if (newStatus == null || status == newStatus) {
@@ -205,34 +145,22 @@ public class PerformanceSeat {
             return;
         }
 
-        throw new PerformanceException(
-                PerformanceErrorCode
-                        .INVALID_ADMIN_SEAT_STATUS
-        );
+        throw new PerformanceException(PerformanceErrorCode.INVALID_ADMIN_SEAT_STATUS);
     }
 
     public void validateAdministrativelyEditable() {
         if (isHeld()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .HELD_SEAT_CANNOT_BE_UPDATED
-            );
+            throw new PerformanceException(PerformanceErrorCode.HELD_SEAT_CANNOT_BE_UPDATED);
         }
 
         if (isReserved()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .RESERVED_SEAT_CANNOT_BE_UPDATED
-            );
+            throw new PerformanceException(PerformanceErrorCode.RESERVED_SEAT_CANNOT_BE_UPDATED);
         }
     }
 
     public void hold() {
-        if (!isAvailable()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_NOT_AVAILABLE
-            );
+        if (isAvailable()) {
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_AVAILABLE);
         }
 
         this.status = PerformanceSeatStatus.HELD;
@@ -240,10 +168,7 @@ public class PerformanceSeat {
 
     public void reserve() {
         if (!isHeld()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_NOT_HELD
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_HELD);
         }
 
         this.status = PerformanceSeatStatus.RESERVED;
@@ -251,21 +176,15 @@ public class PerformanceSeat {
 
     public void release() {
         if (!isHeld()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_NOT_HELD
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_HELD);
         }
 
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
     public void block() {
-        if (!isAvailable()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_NOT_AVAILABLE
-            );
+        if (isAvailable()) {
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_AVAILABLE);
         }
 
         this.status = PerformanceSeatStatus.BLOCKED;
@@ -273,77 +192,48 @@ public class PerformanceSeat {
 
     public void unblock() {
         if (!isBlocked()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_NOT_BLOCKED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_BLOCKED);
         }
 
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
-    private static void validatePerformance(
-            Performance performance
-    ) {
+    private static void validatePerformance(Performance performance) {
         if (performance == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .PERFORMANCE_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_REQUIRED);
         }
     }
 
-    private static void validateSeat(
-            Seat seat
-    ) {
+    private static void validateSeat(Seat seat) {
         if (seat == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_REQUIRED);
         }
     }
 
-    private static void validateGrade(
-            SeatGrade grade
+    private static void validateGrade(SeatGrade grade
     ) {
         if (grade == null) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_GRADE_REQUIRED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_GRADE_REQUIRED);
         }
     }
 
-    private static void validatePrice(
-            long price
-    ) {
+    private static void validatePrice(long price) {
         if (price < 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .INVALID_SEAT_PRICE
-            );
+            throw new PerformanceException(PerformanceErrorCode.INVALID_SEAT_PRICE);
         }
     }
 
     public void deactivateByAdmin() {
         if (isBlocked()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_ALREADY_BLOCKED
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_ALREADY_BLOCKED);
         }
 
         if (isHeld()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .HELD_SEAT_CANNOT_BE_BLOCKED
-            );
+            throw new PerformanceException(PerformanceErrorCode.HELD_SEAT_CANNOT_BE_BLOCKED);
         }
 
         if (isReserved()) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .RESERVED_SEAT_CANNOT_BE_BLOCKED
-            );
+            throw new PerformanceException(PerformanceErrorCode.RESERVED_SEAT_CANNOT_BE_BLOCKED);
         }
 
         this.status = PerformanceSeatStatus.BLOCKED;
@@ -355,9 +245,6 @@ public class PerformanceSeat {
             return;
         }
 
-        throw new PerformanceException(
-                PerformanceErrorCode
-                        .INVALID_SEAT_CANCELLATION_STATUS
-        );
+        throw new PerformanceException(PerformanceErrorCode.INVALID_SEAT_CANCELLATION_STATUS);
     }
 }

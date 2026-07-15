@@ -231,7 +231,7 @@ public class CreateReservationService {
         boolean unavailable =
                 performanceSeats.stream()
                         .anyMatch(performanceSeat ->
-                                !performanceSeat.isAvailable()
+                                performanceSeat.isAvailable()
                         );
 
         if (unavailable) {

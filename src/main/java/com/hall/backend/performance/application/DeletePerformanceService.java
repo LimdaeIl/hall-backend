@@ -15,70 +15,34 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DeletePerformanceService {
 
-    private final PerformanceRepository
-            performanceRepository;
-
-    private final PerformanceSeatRepository
-            performanceSeatRepository;
-
-    private final ReservationSeatRepository
-            reservationSeatRepository;
+    private final PerformanceRepository performanceRepository;
+    private final PerformanceSeatRepository performanceSeatRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
 
     @Transactional
-    public DeletePerformanceResponse delete(
-            Long performanceId
-    ) {
+    public DeletePerformanceResponse delete(Long performanceId) {
         validatePerformanceId(performanceId);
 
-        Performance performance =
-                performanceRepository
-                        .findByIdWithConcert(
-                                performanceId
-                        )
-                        .orElseThrow(
-                                () -> new PerformanceException(
-                                        PerformanceErrorCode
-                                                .PERFORMANCE_NOT_FOUND
-                                )
-                        );
+        Performance performance = performanceRepository.findByIdWithConcert(performanceId)
+                .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND));
 
-        boolean hasReservationHistory =
-                reservationSeatRepository
-                        .existsReservationHistoryByPerformanceId(
-                                performanceId
-                        );
+        boolean hasReservationHistory = reservationSeatRepository.existsReservationHistoryByPerformanceId(performanceId);
 
         if (hasReservationHistory) {
             performance.cancelByAdmin();
-
-            return DeletePerformanceResponse.cancelled(
-                    performance
-            );
+            return DeletePerformanceResponse.cancelled(performance);
         }
 
-        performanceSeatRepository
-                .deleteAllByPerformanceId(
-                        performanceId
-                );
+        performanceSeatRepository.deleteAllByPerformanceId(performanceId);
 
-        performanceRepository.deleteById(
-                performanceId
-        );
+        performanceRepository.deleteById(performanceId);
 
-        return DeletePerformanceResponse.deleted(
-                performanceId
-        );
+        return DeletePerformanceResponse.deleted(performanceId);
     }
 
-    private void validatePerformanceId(
-            Long performanceId
-    ) {
-        if (performanceId == null
-                || performanceId <= 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .PERFORMANCE_NOT_FOUND
-            );
+    private void validatePerformanceId(Long performanceId) {
+        if (performanceId == null || performanceId <= 0) {
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND);
         }
     }
 }

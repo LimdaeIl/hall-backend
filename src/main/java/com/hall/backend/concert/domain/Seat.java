@@ -42,47 +42,24 @@ public class Seat extends BaseAuditEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(
-            name = "seat_number",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "seat_number", nullable = false, length = 20)
     private String seatNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "grade",
-            nullable = false
-    )
+    @Column(name = "grade", nullable = false)
     private SeatGrade grade;
 
-    @Column(
-            name = "seat_row",
-            nullable = false
-    )
+    @Column(name = "seat_row", nullable = false)
     private int rowNumber;
 
-    @Column(
-            name = "seat_column",
-            nullable = false
-    )
+    @Column(name = "seat_column", nullable = false)
     private int columnNumber;
 
-    private Seat(
-            String seatNumber,
-            SeatGrade grade,
-            int rowNumber,
-            int columnNumber
-    ) {
-        String normalizedSeatNumber =
-                normalizeSeatNumber(seatNumber);
-
+    private Seat(String seatNumber, SeatGrade grade, int rowNumber, int columnNumber) {
+        String normalizedSeatNumber = normalizeSeatNumber(seatNumber);
         validateSeatNumber(normalizedSeatNumber);
         validateGrade(grade);
-        validatePosition(
-                rowNumber,
-                columnNumber
-        );
+        validatePosition(rowNumber, columnNumber);
 
         this.seatNumber = normalizedSeatNumber;
         this.grade = grade;
@@ -90,106 +67,62 @@ public class Seat extends BaseAuditEntity {
         this.columnNumber = columnNumber;
     }
 
-    public static Seat create(
-            String seatNumber,
-            SeatGrade grade,
-            int rowNumber,
-            int columnNumber
-    ) {
-        return new Seat(
-                seatNumber,
-                grade,
-                rowNumber,
-                columnNumber
-        );
+    public static Seat create(String seatNumber, SeatGrade grade, int rowNumber, int columnNumber) {
+        return new Seat(seatNumber, grade, rowNumber, columnNumber);
     }
 
-    public void updateLayout(
-            String seatNumber,
-            Integer rowNumber,
-            Integer columnNumber
-    ) {
+    public void updateLayout(String seatNumber, Integer rowNumber, Integer columnNumber) {
         if (seatNumber != null) {
-            String normalizedSeatNumber =
-                    normalizeSeatNumber(seatNumber);
-
+            String normalizedSeatNumber = normalizeSeatNumber(seatNumber);
             validateSeatNumber(normalizedSeatNumber);
             this.seatNumber = normalizedSeatNumber;
         }
 
-        int updatedRowNumber =
-                rowNumber == null
+        int updatedRowNumber = rowNumber == null
                         ? this.rowNumber
                         : rowNumber;
 
-        int updatedColumnNumber =
-                columnNumber == null
+        int updatedColumnNumber = columnNumber == null
                         ? this.columnNumber
                         : columnNumber;
 
-        validatePosition(
-                updatedRowNumber,
-                updatedColumnNumber
-        );
+        validatePosition(updatedRowNumber, updatedColumnNumber);
 
         this.rowNumber = updatedRowNumber;
         this.columnNumber = updatedColumnNumber;
     }
 
-    private static String normalizeSeatNumber(
-            String seatNumber
-    ) {
+    private static String normalizeSeatNumber(String seatNumber) {
         if (seatNumber == null) {
             return null;
         }
 
-        return seatNumber
-                .trim()
-                .toUpperCase(Locale.ROOT);
+        return seatNumber.trim().toUpperCase(Locale.ROOT);
     }
 
-    private static void validateSeatNumber(
-            String seatNumber
-    ) {
+    private static void validateSeatNumber(String seatNumber) {
         if (seatNumber == null || seatNumber.isBlank()) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_NUMBER_REQUIRED
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_REQUIRED);
         }
 
         if (seatNumber.length() > 20) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_NUMBER_TOO_LONG
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_NUMBER_TOO_LONG);
         }
     }
 
-    private static void validateGrade(
-            SeatGrade grade
-    ) {
+    private static void validateGrade(SeatGrade grade) {
         if (grade == null) {
-            throw new ConcertException(
-                    ConcertErrorCode.SEAT_GRADE_REQUIRED
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_GRADE_REQUIRED);
         }
     }
 
-    private static void validatePosition(
-            int rowNumber,
-            int columnNumber
-    ) {
+    private static void validatePosition(int rowNumber, int columnNumber) {
         if (rowNumber <= 0) {
-            throw new ConcertException(
-                    ConcertErrorCode
-                            .SEAT_ROW_NUMBER_INVALID
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_ROW_NUMBER_INVALID);
         }
 
         if (columnNumber <= 0) {
-            throw new ConcertException(
-                    ConcertErrorCode
-                            .SEAT_COLUMN_NUMBER_INVALID
-            );
+            throw new ConcertException(ConcertErrorCode.SEAT_COLUMN_NUMBER_INVALID);
         }
     }
 }

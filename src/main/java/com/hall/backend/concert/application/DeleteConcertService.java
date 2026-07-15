@@ -17,55 +17,26 @@ public class DeleteConcertService {
 
     private final ConcertRepository concertRepository;
     private final PerformanceRepository performanceRepository;
-    private final PerformanceSeatRepository
-            performanceSeatRepository;
+    private final PerformanceSeatRepository performanceSeatRepository;
     private final ReservationRepository reservationRepository;
 
     @Transactional
     public void delete(Long concertId) {
-        validateConcertId(concertId);
+        if (concertId == null || concertId <= 0) {
+            throw new ConcertException(ConcertErrorCode.CONCERT_NOT_FOUND);
+        }
 
         Concert concert = concertRepository.findById(concertId)
-                .orElseThrow(
-                        () -> new ConcertException(
-                                ConcertErrorCode.CONCERT_NOT_FOUND
-                        )
-                );
+                .orElseThrow(() -> new ConcertException(ConcertErrorCode.CONCERT_NOT_FOUND));
 
-        validateNoReservations(concertId);
-
-        performanceSeatRepository.deleteAllByConcertId(
-                concertId
-        );
-
-        performanceRepository.deleteAllByConcertId(
-                concertId
-        );
-
-        concertRepository.delete(concert);
-    }
-
-    private void validateNoReservations(
-            Long concertId
-    ) {
-        boolean hasReservations =
-                reservationRepository
-                        .existsByPerformance_Concert_Id(
-                                concertId
-                        );
+        boolean hasReservations = reservationRepository.existsByPerformance_Concert_Id(concertId);
 
         if (hasReservations) {
-            throw new ConcertException(
-                    ConcertErrorCode.CONCERT_HAS_RESERVATIONS
-            );
+            throw new ConcertException(ConcertErrorCode.CONCERT_HAS_RESERVATIONS);
         }
-    }
 
-    private void validateConcertId(Long concertId) {
-        if (concertId == null || concertId <= 0) {
-            throw new ConcertException(
-                    ConcertErrorCode.CONCERT_NOT_FOUND
-            );
-        }
+        performanceSeatRepository.deleteAllByConcertId(concertId);
+        performanceRepository.deleteAllByConcertId(concertId);
+        concertRepository.delete(concert);
     }
 }

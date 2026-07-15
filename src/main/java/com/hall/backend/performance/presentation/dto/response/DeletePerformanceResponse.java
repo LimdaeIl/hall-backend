@@ -9,9 +9,7 @@ public record DeletePerformanceResponse(
         PerformanceStatus status
 ) {
 
-    public static DeletePerformanceResponse deleted(
-            Long performanceId
-    ) {
+    public static DeletePerformanceResponse deleted(Long performanceId) {
         return new DeletePerformanceResponse(
                 performanceId,
                 DeleteType.DELETED,
@@ -19,9 +17,7 @@ public record DeletePerformanceResponse(
         );
     }
 
-    public static DeletePerformanceResponse cancelled(
-            Performance performance
-    ) {
+    public static DeletePerformanceResponse cancelled(Performance performance) {
         return new DeletePerformanceResponse(
                 performance.getId(),
                 DeleteType.CANCELLED,

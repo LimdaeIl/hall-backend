@@ -14,66 +14,34 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DeletePerformanceSeatService {
 
-    private final PerformanceSeatRepository
-            performanceSeatRepository;
+    private final PerformanceSeatRepository performanceSeatRepository;
 
-    private final ReservationSeatRepository
-            reservationSeatRepository;
+    private final ReservationSeatRepository reservationSeatRepository;
 
     @Transactional
-    public DeletePerformanceSeatResponse delete(
-            Long performanceSeatId
-    ) {
+    public DeletePerformanceSeatResponse delete(Long performanceSeatId) {
         validatePerformanceSeatId(performanceSeatId);
 
-        PerformanceSeat performanceSeat =
-                performanceSeatRepository
-                        .findByIdForUpdate(
-                                performanceSeatId
-                        )
-                        .orElseThrow(
-                                () -> new PerformanceException(
-                                        PerformanceErrorCode
-                                                .SEAT_NOT_FOUND
-                                )
-                        );
+        PerformanceSeat performanceSeat = performanceSeatRepository
+                        .findByIdForUpdate(performanceSeatId)
+                        .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.SEAT_NOT_FOUND));
 
-        validateNoReservationHistory(
-                performanceSeatId
-        );
-
+        validateNoReservationHistory(performanceSeatId);
         performanceSeat.deactivateByAdmin();
-
-        return DeletePerformanceSeatResponse.from(
-                performanceSeat
-        );
+        return DeletePerformanceSeatResponse.from(performanceSeat);
     }
 
-    private void validateNoReservationHistory(
-            Long performanceSeatId
-    ) {
-        boolean hasReservationHistory =
-                reservationSeatRepository
-                        .existsByPerformanceSeat_Id(
-                                performanceSeatId
-                        );
+    private void validateNoReservationHistory(Long performanceSeatId) {
+        boolean hasReservationHistory = reservationSeatRepository.existsByPerformanceSeat_Id(performanceSeatId);
 
         if (hasReservationHistory) {
-            throw new PerformanceException(
-                    PerformanceErrorCode
-                            .SEAT_HAS_RESERVATION_HISTORY
-            );
+            throw new PerformanceException(PerformanceErrorCode.SEAT_HAS_RESERVATION_HISTORY);
         }
     }
 
-    private void validatePerformanceSeatId(
-            Long performanceSeatId
-    ) {
-        if (performanceSeatId == null
-                || performanceSeatId <= 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.SEAT_NOT_FOUND
-            );
+    private void validatePerformanceSeatId(Long performanceSeatId) {
+        if (performanceSeatId == null || performanceSeatId <= 0) {
+            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_FOUND);
         }
     }
 }

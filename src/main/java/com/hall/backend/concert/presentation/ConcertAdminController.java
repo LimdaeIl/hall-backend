@@ -36,39 +36,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @RestController
-public class ConcertAdminController implements  ConcertAdminControllerDocs {
+public class ConcertAdminController implements ConcertAdminControllerDocs {
 
-    private final CreateConcertService
-            createConcertService;
-
-    private final GetAdminConcertsService
-            getAdminConcertsService;
-
-    private final UpdateConcertService
-            updateConcertService;
-
-    private final UpdateConcertStatusService
-            updateConcertStatusService;
-
-    private final DeleteConcertService
-            deleteConcertService;
-
-    private final CreateSeatService
-            createSeatService;
+    private final CreateConcertService createConcertService;
+    private final GetAdminConcertsService getAdminConcertsService;
+    private final UpdateConcertService updateConcertService;
+    private final UpdateConcertStatusService updateConcertStatusService;
+    private final DeleteConcertService deleteConcertService;
+    private final CreateSeatService createSeatService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/concerts")
-    public ResponseEntity<
-            ApiResponse<CreateConcertResponse>
-            > createConcert(
-            @Valid
-            @RequestBody
-            CreateConcertRequest request
-    ) {
-        CreateConcertResponse response =
-                createConcertService.create(
-                        request
-                );
+    public ResponseEntity<ApiResponse<CreateConcertResponse>> createConcert(
+            @Valid @RequestBody CreateConcertRequest request) {
+        CreateConcertResponse response = createConcertService.create(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -82,28 +63,13 @@ public class ConcertAdminController implements  ConcertAdminControllerDocs {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/concerts")
-    public ResponseEntity<
-            ApiResponse<
-                    PageResponse<GetAdminConcertsResponse>
-                    >
-            > getConcerts(
-            @RequestParam(required = false)
-            String title,
-
-            @RequestParam(required = false)
-            String artist,
-
-            @RequestParam(required = false)
-            ConcertStatus status,
-
-            @RequestParam(defaultValue = "0")
-            Integer page,
-
-            @RequestParam(defaultValue = "20")
-            Integer size,
-
-            @RequestParam(defaultValue = "LATEST")
-            ConcertSortType sort
+    public ResponseEntity<ApiResponse<PageResponse<GetAdminConcertsResponse>>> getConcerts(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String artist,
+            @RequestParam(required = false) ConcertStatus status,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "LATEST") ConcertSortType sort
     ) {
         PageResponse<GetAdminConcertsResponse> response =
                 getAdminConcertsService.getConcerts(
@@ -125,20 +91,11 @@ public class ConcertAdminController implements  ConcertAdminControllerDocs {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/concerts/{concertId}")
-    public ResponseEntity<
-            ApiResponse<UpdateConcertResponse>
-            > updateConcert(
+    public ResponseEntity<ApiResponse<UpdateConcertResponse>> updateConcert(
             @PathVariable Long concertId,
-
-            @Valid
-            @RequestBody
-            UpdateConcertRequest request
+            @Valid @RequestBody UpdateConcertRequest request
     ) {
-        UpdateConcertResponse response =
-                updateConcertService.update(
-                        concertId,
-                        request
-                );
+        UpdateConcertResponse response = updateConcertService.update(concertId, request);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -150,20 +107,12 @@ public class ConcertAdminController implements  ConcertAdminControllerDocs {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/concerts/{concertId}/status")
-    public ResponseEntity<
-            ApiResponse<UpdateConcertResponse>
-            > updateConcertStatus(
+    public ResponseEntity<ApiResponse<UpdateConcertResponse>> updateConcertStatus(
             @PathVariable Long concertId,
-
-            @Valid
-            @RequestBody
-            UpdateConcertStatusRequest request
+            @Valid @RequestBody UpdateConcertStatusRequest request
     ) {
-        UpdateConcertResponse response =
-                updateConcertStatusService.updateStatus(
-                        concertId,
-                        request
-                );
+        UpdateConcertResponse response = updateConcertStatusService.updateStatus(concertId,
+                request);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -175,13 +124,10 @@ public class ConcertAdminController implements  ConcertAdminControllerDocs {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/concerts/{concertId}")
-    public ResponseEntity<ApiResponse<Void>>
-    deleteConcert(
+    public ResponseEntity<ApiResponse<Void>> deleteConcert(
             @PathVariable Long concertId
     ) {
-        deleteConcertService.delete(
-                concertId
-        );
+        deleteConcertService.delete(concertId);
 
         return ResponseEntity.ok(
                 ApiResponse.ok(
@@ -193,17 +139,10 @@ public class ConcertAdminController implements  ConcertAdminControllerDocs {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/seats")
-    public ResponseEntity<
-            ApiResponse<CreateSeatResponse>
-            > createSeat(
-            @Valid
-            @RequestBody
-            CreateSeatRequest request
+    public ResponseEntity<ApiResponse<CreateSeatResponse>> createSeat(
+            @Valid @RequestBody CreateSeatRequest request
     ) {
-        CreateSeatResponse response =
-                createSeatService.create(
-                        request
-                );
+        CreateSeatResponse response = createSeatService.create(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

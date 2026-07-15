@@ -17,43 +17,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetAdminPerformanceSeatsService {
 
     private final PerformanceRepository performanceRepository;
-    private final PerformanceSeatRepository
-            performanceSeatRepository;
+    private final PerformanceSeatRepository performanceSeatRepository;
 
     @Transactional(readOnly = true)
-    public GetAdminPerformanceSeatsResponse getSeats(
-            Long performanceId
-    ) {
+    public GetAdminPerformanceSeatsResponse getSeats(Long performanceId) {
         validatePerformanceId(performanceId);
 
-        Performance performance =
-                performanceRepository.findById(performanceId)
-                        .orElseThrow(
-                                () -> new PerformanceException(
-                                        PerformanceErrorCode
-                                                .PERFORMANCE_NOT_FOUND
-                                )
-                        );
+        Performance performance = performanceRepository.findById(performanceId)
+                        .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND));
 
-        List<PerformanceSeat> performanceSeats =
-                performanceSeatRepository
-                        .findAllByPerformanceId(
-                                performanceId
-                        );
+        List<PerformanceSeat> performanceSeats = performanceSeatRepository.findAllByPerformanceId(performanceId);
 
-        return GetAdminPerformanceSeatsResponse.of(
-                performance,
-                performanceSeats
-        );
+        return GetAdminPerformanceSeatsResponse.of(performance, performanceSeats);
     }
 
-    private void validatePerformanceId(
-            Long performanceId
-    ) {
+    private void validatePerformanceId(Long performanceId) {
         if (performanceId == null || performanceId <= 0) {
-            throw new PerformanceException(
-                    PerformanceErrorCode.PERFORMANCE_NOT_FOUND
-            );
+            throw new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND);
         }
     }
 }

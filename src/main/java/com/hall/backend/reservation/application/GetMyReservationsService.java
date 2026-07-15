@@ -21,9 +21,7 @@ public class GetMyReservationsService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
-
-    private final ReservationRepository
-            reservationRepository;
+    private final ReservationRepository reservationRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<GetMyReservationsResponse> getReservations(
@@ -38,26 +36,18 @@ public class GetMyReservationsService {
         int resolvedPage = resolvePage(page);
         int resolvedSize = resolveSize(size);
 
-        ReservationSortType resolvedSortType =
-                resolveSortType(sortType);
+        ReservationSortType resolvedSortType = resolveSortType(sortType);
 
-        PageRequest pageRequest = PageRequest.of(
-                resolvedPage,
-                resolvedSize,
-                resolvedSortType.toSort()
+        PageRequest pageRequest = PageRequest.of(resolvedPage, resolvedSize,
+                resolvedSortType.toSort());
+
+        Page<MemberReservationProjection> reservations = reservationRepository.findMyReservations(
+                principal.memberId(),
+                status,
+                pageRequest
         );
 
-        Page<MemberReservationProjection> reservations =
-                reservationRepository.findMyReservations(
-                        principal.memberId(),
-                        status,
-                        pageRequest
-                );
-
-        return PageResponse.from(
-                reservations,
-                GetMyReservationsResponse::from
-        );
+        return PageResponse.from(reservations, GetMyReservationsResponse::from);
     }
 
     private int resolvePage(Integer page) {
@@ -66,10 +56,7 @@ public class GetMyReservationsService {
         }
 
         if (page < 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_PAGE_NUMBER
-            );
+            throw new ReservationException(ReservationErrorCode.INVALID_PAGE_NUMBER);
         }
 
         return page;
@@ -81,33 +68,21 @@ public class GetMyReservationsService {
         }
 
         if (size <= 0 || size > MAX_PAGE_SIZE) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .INVALID_PAGE_SIZE
-            );
+            throw new ReservationException(ReservationErrorCode.INVALID_PAGE_SIZE);
         }
 
         return size;
     }
 
-    private ReservationSortType resolveSortType(
-            ReservationSortType sortType
-    ) {
+    private ReservationSortType resolveSortType(ReservationSortType sortType) {
         return sortType == null
                 ? ReservationSortType.LATEST
                 : sortType;
     }
 
-    private void validatePrincipal(
-            MemberPrincipal principal
-    ) {
-        if (principal == null
-                || principal.memberId() == null
-                || principal.memberId() <= 0) {
-            throw new ReservationException(
-                    ReservationErrorCode
-                            .RESERVATION_NOT_FOUND
-            );
+    private void validatePrincipal(MemberPrincipal principal) {
+        if (principal == null || principal.memberId() == null || principal.memberId() <= 0) {
+            throw new ReservationException(ReservationErrorCode.RESERVATION_NOT_FOUND);
         }
     }
 }

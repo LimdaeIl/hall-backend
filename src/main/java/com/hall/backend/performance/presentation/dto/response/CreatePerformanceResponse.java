@@ -13,9 +13,7 @@ public record CreatePerformanceResponse(
         String status
 ) {
 
-    public static CreatePerformanceResponse from(
-            Performance performance
-    ) {
+    public static CreatePerformanceResponse from(Performance performance) {
         return new CreatePerformanceResponse(
                 performance.getId(),
                 performance.getConcert().getId(),

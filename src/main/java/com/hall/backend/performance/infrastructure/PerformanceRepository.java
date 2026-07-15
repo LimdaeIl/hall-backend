@@ -21,37 +21,53 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
             LocalDateTime startsAt
     );
 
+    boolean existsByConcertIdAndStartsAtAndIdNot(
+            Long concertId,
+            LocalDateTime startsAt,
+            Long performanceId
+    );
+
     @Query("""
-            select
-                p.id as performanceId,
-                p.startsAt as startsAt,
-                p.reservationOpensAt as reservationOpensAt,
-                p.reservationClosesAt as reservationClosesAt,
-                p.maxTicketsPerMember as maxTicketsPerMember,
-                p.status as status,
-                sum(
-                    case
-                        when ps.status =
+            SELECT p
+            FROM Performance p
+            JOIN FETCH p.concert
+            WHERE p.id = :performanceId
+            """)
+    Optional<Performance> findByIdWithConcert(
+            @Param("performanceId") Long performanceId
+    );
+
+    @Query("""
+            SELECT
+                p.id AS performanceId,
+                p.startsAt AS startsAt,
+                p.reservationOpensAt AS reservationOpensAt,
+                p.reservationClosesAt AS reservationClosesAt,
+                p.maxTicketsPerMember AS maxTicketsPerMember,
+                p.status AS status,
+                SUM(
+                    CASE
+                        WHEN ps.status =
                             com.hall.backend.performance.domain.PerformanceSeatStatus.AVAILABLE
-                        then 1
-                        else 0
-                    end
-                ) as availableSeatCount
-            from Performance p
-            left join PerformanceSeat ps
-                on ps.performance = p
-            where p.concert.id = :concertId
-              and p.status in :statuses
-            group by
+                        THEN 1
+                        ELSE 0
+                    END
+                ) AS availableSeatCount
+            FROM Performance p
+            LEFT JOIN PerformanceSeat ps
+                ON ps.performance = p
+            WHERE p.concert.id = :concertId
+              AND p.status IN :statuses
+            GROUP BY
                 p.id,
                 p.startsAt,
                 p.reservationOpensAt,
                 p.reservationClosesAt,
                 p.maxTicketsPerMember,
                 p.status
-            order by
-                p.startsAt asc,
-                p.id asc
+            ORDER BY
+                p.startsAt ASC,
+                p.id ASC
             """)
     List<ConcertPerformanceProjection> findConcertPerformances(
             @Param("concertId") Long concertId,
@@ -63,154 +79,111 @@ public interface PerformanceRepository extends JpaRepository<Performance, Long> 
             clearAutomatically = true
     )
     @Query("""
-            delete from Performance p
-            where p.concert.id = :concertId
+            DELETE FROM Performance p
+            WHERE p.concert.id = :concertId
             """)
     int deleteAllByConcertId(
             @Param("concertId") Long concertId
     );
 
-    boolean existsByConcertIdAndStartsAtAndIdNot(
-            Long concertId,
-            LocalDateTime startsAt,
-            Long performanceId
-    );
-
-    @Query("""
-        select p
-        from Performance p
-        join fetch p.concert c
-        where p.id = :performanceId
-        """)
-    Optional<Performance> findByIdWithConcert(
-            @Param("performanceId")
-            Long performanceId
-    );
-
     @Query(
             value = """
-                select p
-                from Performance p
-                join fetch p.concert c
-                where (
-                        :concertId is null
-                        or c.id = :concertId
+                    SELECT p
+                    FROM Performance p
+                    JOIN FETCH p.concert c
+                    WHERE (
+                        :concertId IS NULL
+                        OR c.id = :concertId
+                    )
+                      AND (
+                          :concertTitle IS NULL
+                          OR LOWER(c.title) LIKE LOWER(
+                              CONCAT('%', :concertTitle, '%')
+                          )
                       )
-                  and (
-                        :concertTitle is null
-                        or lower(c.title) like lower(
-                            concat('%', :concertTitle, '%')
-                        )
+                      AND (
+                          :status IS NULL
+                          OR p.status = :status
                       )
-                  and (
-                        :status is null
-                        or p.status = :status
+                      AND (
+                          :startsAtFrom IS NULL
+                          OR p.startsAt >= :startsAtFrom
                       )
-                  and (
-                        :startsAtFrom is null
-                        or p.startsAt >= :startsAtFrom
+                      AND (
+                          :startsAtTo IS NULL
+                          OR p.startsAt <= :startsAtTo
                       )
-                  and (
-                        :startsAtTo is null
-                        or p.startsAt <= :startsAtTo
+                      AND (
+                          :reservationOpensAtFrom IS NULL
+                          OR p.reservationOpensAt >= :reservationOpensAtFrom
                       )
-                  and (
-                        :reservationOpensAtFrom is null
-                        or p.reservationOpensAt >=
-                            :reservationOpensAtFrom
+                      AND (
+                          :reservationOpensAtTo IS NULL
+                          OR p.reservationOpensAt <= :reservationOpensAtTo
                       )
-                  and (
-                        :reservationOpensAtTo is null
-                        or p.reservationOpensAt <=
-                            :reservationOpensAtTo
+                      AND (
+                          :reservationClosesAtFrom IS NULL
+                          OR p.reservationClosesAt >= :reservationClosesAtFrom
                       )
-                  and (
-                        :reservationClosesAtFrom is null
-                        or p.reservationClosesAt >=
-                            :reservationClosesAtFrom
+                      AND (
+                          :reservationClosesAtTo IS NULL
+                          OR p.reservationClosesAt <= :reservationClosesAtTo
                       )
-                  and (
-                        :reservationClosesAtTo is null
-                        or p.reservationClosesAt <=
-                            :reservationClosesAtTo
-                      )
-                """,
+                    """,
             countQuery = """
-                select count(p)
-                from Performance p
-                join p.concert c
-                where (
-                        :concertId is null
-                        or c.id = :concertId
+                    SELECT COUNT(p)
+                    FROM Performance p
+                    JOIN p.concert c
+                    WHERE (
+                        :concertId IS NULL
+                        OR c.id = :concertId
+                    )
+                      AND (
+                          :concertTitle IS NULL
+                          OR LOWER(c.title) LIKE LOWER(
+                              CONCAT('%', :concertTitle, '%')
+                          )
                       )
-                  and (
-                        :concertTitle is null
-                        or lower(c.title) like lower(
-                            concat('%', :concertTitle, '%')
-                        )
+                      AND (
+                          :status IS NULL
+                          OR p.status = :status
                       )
-                  and (
-                        :status is null
-                        or p.status = :status
+                      AND (
+                          :startsAtFrom IS NULL
+                          OR p.startsAt >= :startsAtFrom
                       )
-                  and (
-                        :startsAtFrom is null
-                        or p.startsAt >= :startsAtFrom
+                      AND (
+                          :startsAtTo IS NULL
+                          OR p.startsAt <= :startsAtTo
                       )
-                  and (
-                        :startsAtTo is null
-                        or p.startsAt <= :startsAtTo
+                      AND (
+                          :reservationOpensAtFrom IS NULL
+                          OR p.reservationOpensAt >= :reservationOpensAtFrom
                       )
-                  and (
-                        :reservationOpensAtFrom is null
-                        or p.reservationOpensAt >=
-                            :reservationOpensAtFrom
+                      AND (
+                          :reservationOpensAtTo IS NULL
+                          OR p.reservationOpensAt <= :reservationOpensAtTo
                       )
-                  and (
-                        :reservationOpensAtTo is null
-                        or p.reservationOpensAt <=
-                            :reservationOpensAtTo
+                      AND (
+                          :reservationClosesAtFrom IS NULL
+                          OR p.reservationClosesAt >= :reservationClosesAtFrom
                       )
-                  and (
-                        :reservationClosesAtFrom is null
-                        or p.reservationClosesAt >=
-                            :reservationClosesAtFrom
+                      AND (
+                          :reservationClosesAtTo IS NULL
+                          OR p.reservationClosesAt <= :reservationClosesAtTo
                       )
-                  and (
-                        :reservationClosesAtTo is null
-                        or p.reservationClosesAt <=
-                            :reservationClosesAtTo
-                      )
-                """
+                    """
     )
     Page<Performance> searchForAdmin(
-            @Param("concertId")
-            Long concertId,
-
-            @Param("concertTitle")
-            String concertTitle,
-
-            @Param("status")
-            PerformanceStatus status,
-
-            @Param("startsAtFrom")
-            LocalDateTime startsAtFrom,
-
-            @Param("startsAtTo")
-            LocalDateTime startsAtTo,
-
-            @Param("reservationOpensAtFrom")
-            LocalDateTime reservationOpensAtFrom,
-
-            @Param("reservationOpensAtTo")
-            LocalDateTime reservationOpensAtTo,
-
-            @Param("reservationClosesAtFrom")
-            LocalDateTime reservationClosesAtFrom,
-
-            @Param("reservationClosesAtTo")
-            LocalDateTime reservationClosesAtTo,
-
+            @Param("concertId") Long concertId,
+            @Param("concertTitle") String concertTitle,
+            @Param("status") PerformanceStatus status,
+            @Param("startsAtFrom") LocalDateTime startsAtFrom,
+            @Param("startsAtTo") LocalDateTime startsAtTo,
+            @Param("reservationOpensAtFrom") LocalDateTime reservationOpensAtFrom,
+            @Param("reservationOpensAtTo") LocalDateTime reservationOpensAtTo,
+            @Param("reservationClosesAtFrom") LocalDateTime reservationClosesAtFrom,
+            @Param("reservationClosesAtTo") LocalDateTime reservationClosesAtTo,
             Pageable pageable
     );
 }

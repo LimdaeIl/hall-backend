@@ -8,25 +8,16 @@ import org.springframework.data.repository.query.Param;
 public interface ReservationSeatRepository
         extends JpaRepository<ReservationSeat, Long> {
 
-    boolean existsByPerformanceSeat_Id(
-            Long performanceSeatId
-    );
+    boolean existsByPerformanceSeat_Id(Long performanceSeatId);
 
-    boolean existsByPerformanceSeat_Performance_Id(
-            Long performanceId
-    );
+    boolean existsByPerformanceSeat_Performance_Id(Long performanceId);
 
     @Query("""
-        select case
-            when count(rs) > 0 then true
-            else false
-        end
-        from ReservationSeat rs
-        where rs.performanceSeat.performance.id =
-            :performanceId
+        SELECT COUNT(rs) > 0
+        FROM ReservationSeat rs
+        WHERE rs.performanceSeat.performance.id = :performanceId
         """)
     boolean existsReservationHistoryByPerformanceId(
-            @Param("performanceId")
-            Long performanceId
+            @Param("performanceId") Long performanceId
     );
 }
