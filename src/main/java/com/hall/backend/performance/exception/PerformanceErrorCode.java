@@ -43,7 +43,8 @@ public enum PerformanceErrorCode implements ErrorCode {
     PERFORMANCE_SEATS_ALREADY_EXIST(HttpStatus.CONFLICT, "해당 공연의 좌석이 이미 생성되어 있습니다."),
     NO_AVAILABLE_BASE_SEATS(HttpStatus.NOT_FOUND, "공연에 연결할 공연장 좌석이 존재하지 않습니다."),
     PERFORMANCE_SEATS_REQUIRED(HttpStatus.CONFLICT, "공연을 오픈하기 전에 공연 좌석을 생성해야 합니다."),
-    INVALID_SEAT_CANCELLATION_STATUS(HttpStatus.CONFLICT, "유효하지 않은 좌석 취소 상태입니다.");
+    INVALID_SEAT_CANCELLATION_STATUS(HttpStatus.CONFLICT, "유효하지 않은 좌석 취소 상태입니다."),
+    NO_PERFORMANCE_UPDATE_FIELDS(HttpStatus.BAD_REQUEST, "수정할 공연 정보가 없습니다."),;
 
     private final HttpStatus status;
     private final String message;
