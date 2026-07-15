@@ -10,7 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ConcertRepository extends JpaRepository<Concert, Long> {
+public interface ConcertRepository
+        extends JpaRepository<Concert, Long> {
 
     boolean existsByTitle(String title);
 
@@ -18,38 +19,39 @@ public interface ConcertRepository extends JpaRepository<Concert, Long> {
             Long concertId,
             Collection<ConcertStatus> statuses
     );
+
     @Query(
             value = """
-                    SELECT c
-                    FROM Concert c
-                    WHERE c.status IN :statuses
-                      AND (
-                            :title IS NULL
-                            OR LOWER(c.title) LIKE LOWER(
-                                CONCAT('%', :title, '%')
+                    select c
+                    from Concert c
+                    where c.status in :statuses
+                      and (
+                            :title is null
+                            or lower(c.title) like lower(
+                                concat('%', :title, '%')
                             )
                       )
-                      AND (
-                            :artist IS NULL
-                            OR LOWER(c.artist) LIKE LOWER(
-                                CONCAT('%', :artist, '%')
+                      and (
+                            :artist is null
+                            or lower(c.artist) like lower(
+                                concat('%', :artist, '%')
                             )
                       )
                     """,
             countQuery = """
-                    SELECT COUNT(c)
-                    FROM Concert c
-                    WHERE c.status IN :statuses
-                      AND (
-                            :title IS NULL
-                            OR LOWER(c.title) LIKE LOWER(
-                                CONCAT('%', :title, '%')
+                    select count(c)
+                    from Concert c
+                    where c.status in :statuses
+                      and (
+                            :title is null
+                            or lower(c.title) like lower(
+                                concat('%', :title, '%')
                             )
                       )
-                      AND (
-                            :artist IS NULL
-                            OR LOWER(c.artist) LIKE LOWER(
-                                CONCAT('%', :artist, '%')
+                      and (
+                            :artist is null
+                            or lower(c.artist) like lower(
+                                concat('%', :artist, '%')
                             )
                       )
                     """
@@ -57,7 +59,57 @@ public interface ConcertRepository extends JpaRepository<Concert, Long> {
     Page<Concert> searchForMember(
             @Param("title") String title,
             @Param("artist") String artist,
-            @Param("statuses") Collection<ConcertStatus> statuses,
+            @Param("statuses")
+            Collection<ConcertStatus> statuses,
+            Pageable pageable
+    );
+
+    @Query(
+            value = """
+                    select c
+                    from Concert c
+                    where (
+                            :title is null
+                            or lower(c.title) like lower(
+                                concat('%', :title, '%')
+                            )
+                          )
+                      and (
+                            :artist is null
+                            or lower(c.artist) like lower(
+                                concat('%', :artist, '%')
+                            )
+                          )
+                      and (
+                            :status is null
+                            or c.status = :status
+                          )
+                    """,
+            countQuery = """
+                    select count(c)
+                    from Concert c
+                    where (
+                            :title is null
+                            or lower(c.title) like lower(
+                                concat('%', :title, '%')
+                            )
+                          )
+                      and (
+                            :artist is null
+                            or lower(c.artist) like lower(
+                                concat('%', :artist, '%')
+                            )
+                          )
+                      and (
+                            :status is null
+                            or c.status = :status
+                          )
+                    """
+    )
+    Page<Concert> searchForAdmin(
+            @Param("title") String title,
+            @Param("artist") String artist,
+            @Param("status") ConcertStatus status,
             Pageable pageable
     );
 }
