@@ -31,7 +31,19 @@ public enum PerformanceErrorCode implements ErrorCode {
     INVALID_PERFORMANCE_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 공연 상태입니다."),
     INVALID_MAX_TICKETS_PER_MEMBER(HttpStatus.BAD_REQUEST, "유효하지 않은 최대 티켓 수입니다."),
     RESERVATION_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "예약 가능한 티켓 수를 초과했습니다."),
-    INVALID_TICKET_COUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 티켓 수입니다.");
+    INVALID_TICKET_COUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 티켓 수입니다."),
+    NO_SEAT_UPDATE_FIELDS(HttpStatus.BAD_REQUEST, "수정할 좌석 정보가 없습니다."),
+    INVALID_ADMIN_SEAT_STATUS(HttpStatus.BAD_REQUEST, "관리자가 지정할 수 있는 좌석 상태는 AVAILABLE 또는 BLOCKED입니다."),
+    HELD_SEAT_CANNOT_BE_UPDATED(HttpStatus.CONFLICT, "임시 선점된 좌석은 수정할 수 없습니다."),
+    RESERVED_SEAT_CANNOT_BE_UPDATED(HttpStatus.CONFLICT, "예약 완료된 좌석은 수정할 수 없습니다."),
+    SEAT_ALREADY_BLOCKED(HttpStatus.CONFLICT, "이미 사용 불가 처리된 좌석입니다."),
+    HELD_SEAT_CANNOT_BE_BLOCKED(HttpStatus.CONFLICT, "임시 선점 중인 좌석은 사용 불가 처리할 수 없습니다."),
+    RESERVED_SEAT_CANNOT_BE_BLOCKED(HttpStatus.CONFLICT, "예약 완료된 좌석은 사용 불가 처리할 수 없습니다."),
+    SEAT_HAS_RESERVATION_HISTORY(HttpStatus.CONFLICT, "예약 이력이 존재하는 좌석은 사용 불가 처리할 수 없습니다."),
+    PERFORMANCE_SEATS_ALREADY_EXIST(HttpStatus.CONFLICT, "해당 공연의 좌석이 이미 생성되어 있습니다."),
+    NO_AVAILABLE_BASE_SEATS(HttpStatus.NOT_FOUND, "공연에 연결할 공연장 좌석이 존재하지 않습니다."),
+    PERFORMANCE_SEATS_REQUIRED(HttpStatus.CONFLICT, "공연을 오픈하기 전에 공연 좌석을 생성해야 합니다."),
+    INVALID_SEAT_CANCELLATION_STATUS(HttpStatus.CONFLICT, "유효하지 않은 좌석 취소 상태입니다.");
 
     private final HttpStatus status;
     private final String message;

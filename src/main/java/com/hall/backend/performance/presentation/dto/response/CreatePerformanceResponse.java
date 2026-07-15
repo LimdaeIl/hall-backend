@@ -10,13 +10,11 @@ public record CreatePerformanceResponse(
         LocalDateTime reservationOpensAt,
         LocalDateTime reservationClosesAt,
         int maxTicketsPerMember,
-        String status,
-        int createdSeatCount
+        String status
 ) {
 
-    public static CreatePerformanceResponse of(
-            Performance performance,
-            int createdSeatCount
+    public static CreatePerformanceResponse from(
+            Performance performance
     ) {
         return new CreatePerformanceResponse(
                 performance.getId(),
@@ -25,8 +23,7 @@ public record CreatePerformanceResponse(
                 performance.getReservationOpensAt(),
                 performance.getReservationClosesAt(),
                 performance.getMaxTicketsPerMember(),
-                performance.getStatus().name(),
-                createdSeatCount
+                performance.getStatus().name()
         );
     }
 }
