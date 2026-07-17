@@ -157,45 +157,53 @@ public class PerformanceSeat {
             throw new PerformanceException(PerformanceErrorCode.RESERVED_SEAT_CANNOT_BE_UPDATED);
         }
     }
-
     public void hold() {
-        if (isAvailable()) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_AVAILABLE);
-        }
-
+        requireStatus(
+                PerformanceSeatStatus.AVAILABLE,
+                PerformanceErrorCode.SEAT_NOT_AVAILABLE
+        );
         this.status = PerformanceSeatStatus.HELD;
     }
 
     public void reserve() {
-        if (!isHeld()) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_HELD);
-        }
-
+        requireStatus(
+                PerformanceSeatStatus.HELD,
+                PerformanceErrorCode.SEAT_NOT_HELD
+        );
         this.status = PerformanceSeatStatus.RESERVED;
     }
 
     public void release() {
-        if (!isHeld()) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_HELD);
-        }
-
+        requireStatus(
+                PerformanceSeatStatus.HELD,
+                PerformanceErrorCode.SEAT_NOT_HELD
+        );
         this.status = PerformanceSeatStatus.AVAILABLE;
     }
 
     public void block() {
-        if (isAvailable()) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_AVAILABLE);
-        }
-
+        requireStatus(
+                PerformanceSeatStatus.AVAILABLE,
+                PerformanceErrorCode.SEAT_NOT_AVAILABLE
+        );
         this.status = PerformanceSeatStatus.BLOCKED;
     }
 
     public void unblock() {
-        if (!isBlocked()) {
-            throw new PerformanceException(PerformanceErrorCode.SEAT_NOT_BLOCKED);
-        }
-
+        requireStatus(
+                PerformanceSeatStatus.BLOCKED,
+                PerformanceErrorCode.SEAT_NOT_BLOCKED
+        );
         this.status = PerformanceSeatStatus.AVAILABLE;
+    }
+
+    private void requireStatus(
+            PerformanceSeatStatus expected,
+            PerformanceErrorCode errorCode
+    ) {
+        if (status != expected) {
+            throw new PerformanceException(errorCode);
+        }
     }
 
     private static void validatePerformance(Performance performance) {

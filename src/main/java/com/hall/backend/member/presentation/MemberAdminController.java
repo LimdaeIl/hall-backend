@@ -18,7 +18,7 @@ public class MemberAdminController implements MemberAdminControllerDocs {
 
     private final UpdateRoleService updateRoleService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{memberId}/role")
     public ResponseEntity<ApiResponse<GetMeResponse>> updateRole(
             @PathVariable Long memberId

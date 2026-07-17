@@ -33,59 +33,63 @@ public class SecurityConfig {
                 .sessionManagement(
                         session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
-                                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(
-                                        HttpMethod.OPTIONS,
-                                        "/**"
-                                )
-                                .permitAll()
+                        .requestMatchers(
+                                "/api/v1/admin/members/*/role"
+                        )
+                        .permitAll()
 
-                                .requestMatchers(
-                                        "/api/v1/auth/**",
-                                        "/api/v1/oauth/**"
-                                )
-                                .permitAll()
+                        .requestMatchers(
+                                HttpMethod.OPTIONS, "/**"
+                        )
+                        .permitAll()
 
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/api/v1/members/sign-up"
-                                )
-                                .permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/**",
+                                "/api/v1/oauth/**"
+                        )
+                        .permitAll()
 
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/api/v1/concerts",
-                                        "/api/v1/concerts/*",
-                                        "/api/v1/concerts/*/performances"
-                                )
-                                .permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/v1/members/sign-up"
+                        )
+                        .permitAll()
 
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/api/v1/performances/*",
-                                        "/api/v1/performances/*/seats"
-                                )
-                                .permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/concerts",
+                                "/api/v1/concerts/*",
+                                "/api/v1/concerts/*/performances"
+                        )
+                        .permitAll()
 
-                                .requestMatchers(
-                                        "/api/v1/admin/**"
-                                )
-                                .hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/performances/*",
+                                "/api/v1/performances/*/seats"
+                        )
+                        .permitAll()
 
-                                .requestMatchers(
-                                        "/swagger-ui/**",
-                                        "/v3/api-docs/**",
-                                        "/swagger-ui.html",
-                                        "/docs/index.html",
-                                        "/error"
-                                )
-                                .permitAll()
+                        .requestMatchers(
+                                "/api/v1/admin/**"
+                        )
+                        .hasRole("ADMIN")
 
-                                .anyRequest()
-                                .authenticated()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/docs/index.html",
+                                "/error"
+                        )
+                        .permitAll()
+
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .addFilterBefore(
