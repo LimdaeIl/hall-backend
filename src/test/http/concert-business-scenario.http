@@ -1,0 +1,689 @@
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+### 사전에 존재해야 하는 관리자 계정
+@adminEmail = admin@example.com
+@adminPassword = Admin1234!
+
+### 시나리오에서 신규 생성할 일반 회원
+@memberEmail = scenario-user-20260715@example.com
+@memberPassword = User1234!
+@memberName = 시나리오회원
+@memberPhone = 01012345678
+
+### 공연 일정: 실행 시점에 맞게 미래 날짜로 변경
+@reservationOpensAt = 2026-07-15T00:00:00
+@reservationClosesAt = 2026-08-30T23:59:59
+@startsAt = 2026-08-31T19:00:00
+
+### 관리자 회원가입
+POST http://localhost:8080/api/v1/members/sign-up
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}",
+  "name": "AdminUser",
+  "phone": "01012341234"
+}
+
+> {%
+   client.global.set("adminId", response.body.data.id);
+%}
+
+
+### 권한 관리자로 수정
+PATCH http://localhost:8080/api/v1/admin/members/{{adminId}}/role
+Content-Type: application/json
+
+### 관리자 로그인
+# @name adminSignIn
+POST {{baseUrl}}/api/v1/auth/sign-in
+Content-Type: {{contentType}}
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+> {%
+client.test("관리자 로그인 성공", function () {
+  client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+  client.assert(response.body.data.accessToken, "Access Token이 없습니다.");
+});
+client.global.set("adminAccessToken", response.body.data.accessToken);
+client.global.set("adminMemberId", response.body.data.memberId);
+if (response.body.data.refreshToken) {
+  client.global.set("adminRefreshToken", response.body.data.refreshToken);
+}
+%}
+
+
+### 1. 공연장 기준 좌석 생성
+### 기대 결과: 좌석 4개 생성
+# @name createVenueSeats
+POST {{baseUrl}}/api/v1/admin/seats
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "seats": [
+    {
+      "seatNumber": "A-1",
+      "rowNumber": 1,
+      "columnNumber": 1,
+      "grade": "VIP"
+    },
+    {
+      "seatNumber": "A-2",
+      "rowNumber": 1,
+      "columnNumber": 2,
+      "grade": "VIP"
+    },
+    {
+      "seatNumber": "B-1",
+      "rowNumber": 2,
+      "columnNumber": 1,
+      "grade": "R"
+    },
+    {
+      "seatNumber": "B-2",
+      "rowNumber": 2,
+      "columnNumber": 2,
+      "grade": "R"
+    }
+  ]
+}
+
+> {%
+  client.test("공연장 좌석 생성 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.createdCount === 4, "생성 좌석 수가 4가 아닙니다.");
+  });
+%}
+
+
+### 2. 콘서트 생성
+### 기대 결과: PREPARING 상태의 콘서트 생성
+# @name createConcert
+POST {{baseUrl}}/api/v1/admin/concerts
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "2026 HTTP Client Scenario Concert",
+  "artist": "Scenario Band",
+  "description": "핵심 비즈니스 로직 검증을 위한 자동 실행 시나리오"
+}
+
+> {%
+  client.test("콘서트 생성 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.id, "concertId가 없습니다.");
+  });
+  client.global.set("concertId", response.body.data.id);
+%}
+
+
+
+### 3. 콘서트 정보 수정
+### 기대 결과: 수정된 제목과 설명 반환
+PATCH {{baseUrl}}/api/v1/admin/concerts/{{concertId}}
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "title": "2026 HTTP Scenario Concert - Updated",
+  "artist": "Scenario Band",
+  "description": "생성 및 수정 로직이 검증된 콘서트"
+}
+
+> {%
+  client.test("콘서트 수정 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.title.includes("Updated"), "수정된 제목이 반영되지 않았습니다.");
+  });
+%}
+
+
+### 4. 콘서트 공개 상태 변경
+### 구현 enum에 따라 OPEN/PUBLISHED/ON_SALE 중 실제 값을 사용하십시오.
+### 현재 예시는 OPEN을 사용합니다.
+# @name openConcert
+PATCH {{baseUrl}}/api/v1/admin/concerts/{{concertId}}/status
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "OPEN"
+}
+
+> {%
+  client.test("콘서트 상태 변경 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.status, "콘서트 상태가 없습니다.");
+  });
+%}
+
+
+### 5. 공연 회차 생성
+# @name createPerformance
+POST {{baseUrl}}/api/v1/admin/performances
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "concertId": {{concertId}},
+  "startsAt": "{{startsAt}}",
+  "reservationOpensAt": "{{reservationOpensAt}}",
+  "reservationClosesAt": "{{reservationClosesAt}}",
+  "maxTicketsPerMember": 2
+}
+
+> {%
+  client.test("공연 회차 생성 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    const data = response.body.data;
+    client.assert(data.performanceId || data.id, "performanceId가 없습니다.");
+  });
+  const data = response.body.data;
+  client.global.set("performanceId", data.performanceId || data.id);
+%}
+
+
+### 6. 공연 좌석 일괄 생성
+### 기대 결과: 공연장 좌석 4개를 기반으로 공연 좌석 생성
+# @name createPerformanceSeats
+POST {{baseUrl}}/api/v1/admin/performances/{{performanceId}}/seats
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "seatPrices": [
+    {
+      "grade": "VIP",
+      "price": 150000
+    },
+    {
+      "grade": "R",
+      "price": 100000
+    }
+  ]
+}
+
+> {%
+  client.test("공연 좌석 일괄 생성 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.createdSeatCount >= 4, "공연 좌석이 충분히 생성되지 않았습니다.");
+  });
+%}
+
+
+### 7. 공연 회차 수정
+### 기대 결과: 최대 구매 가능 매수 등 기본 정보 수정
+PATCH {{baseUrl}}/api/v1/admin/performances/{{performanceId}}
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "startsAt": "{{startsAt}}",
+  "reservationOpensAt": "{{reservationOpensAt}}",
+  "reservationClosesAt": "{{reservationClosesAt}}",
+  "maxTicketsPerMember": 2
+}
+
+> {%
+  client.test("공연 회차 수정 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.maxTicketsPerMember === 2, "최대 구매 매수가 반영되지 않았습니다.");
+  });
+%}
+
+
+### 8. 공연 회차 예약 가능 상태 변경
+### 구현 enum에 따라 OPEN/ON_SALE 중 실제 값을 사용하십시오.
+### 현재 예시는 OPEN을 사용합니다.
+PATCH {{baseUrl}}/api/v1/admin/performances/{{performanceId}}/status
+Authorization: Bearer {{adminAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "status": "OPEN"
+}
+
+> {%
+  client.test("공연 상태 변경 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+  });
+%}
+
+
+### 9. 관리자 공연 좌석 전체 조회 및 좌석 ID 확보
+### 기대 결과: AVAILABLE 좌석 4개 조회
+# @name adminGetPerformanceSeats
+GET {{baseUrl}}/api/v1/admin/performances/{{performanceId}}/seats
+Authorization: Bearer {{adminAccessToken}}
+
+> {%
+  client.test("관리자 공연 좌석 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.seats.length >= 4, "공연 좌석이 4개 미만입니다.");
+  });
+%}
+
+
+
+### 10. 일반 회원 가입
+### 기대 결과: USER 권한의 ACTIVE 회원 생성
+# @name memberSignUp
+POST {{baseUrl}}/api/v1/members/sign-up
+Content-Type: {{contentType}}
+
+{
+  "email": "{{memberEmail}}",
+  "password": "{{memberPassword}}",
+  "name": "{{memberName}}",
+  "phone": "{{memberPhone}}"
+}
+
+> {%
+  client.test("회원 가입 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.id, "memberId가 없습니다.");
+  });
+  client.global.set("memberId", response.body.data.id);
+%}
+
+
+
+### 11. 일반 회원 로그인
+### 기대 결과: Access Token 및 Refresh Token 발급
+# @name memberSignIn
+POST {{baseUrl}}/api/v1/auth/sign-in
+Content-Type: {{contentType}}
+
+{
+  "email": "{{memberEmail}}",
+  "password": "{{memberPassword}}"
+}
+
+> {%
+  client.test("회원 로그인 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.accessToken, "Access Token이 없습니다.");
+  });
+  client.global.set("memberAccessToken", response.body.data.accessToken);
+  if (response.body.data.refreshToken) {
+    client.global.set("memberRefreshToken", response.body.data.refreshToken);
+  }
+%}
+
+
+
+### 12. 내 정보 조회
+### 기대 결과: 로그인한 회원 본인의 이메일 반환
+GET {{baseUrl}}/api/v1/members/me
+Authorization: Bearer {{memberAccessToken}}
+
+> {%
+  client.test("내 정보 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.email === "{{memberEmail}}", "로그인 회원 정보가 일치하지 않습니다.");
+  });
+%}
+
+
+### 13. 공개 콘서트 목록 조회
+### 기대 결과: 생성한 콘서트가 공개 목록에서 검색됨
+GET {{baseUrl}}/api/v1/concerts?title=HTTP%20Scenario&page=0&size=20&sort=LATEST
+
+> {%
+  client.test("공개 콘서트 목록 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+  });
+%}
+
+
+
+### 14. 콘서트 상세 및 회차 목록 조회
+GET {{baseUrl}}/api/v1/concerts/{{concertId}}
+
+###
+GET {{baseUrl}}/api/v1/concerts/{{concertId}}/performances
+
+
+
+### 15. 공연 상세 조회
+### 기대 결과: 좌석 요약과 예약 가능 상태 확인
+GET {{baseUrl}}/api/v1/performances/{{performanceId}}
+
+> {%
+  client.test("공연 상세 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.performanceId == client.global.get("performanceId"), "공연 ID가 일치하지 않습니다.");
+  });
+%}
+
+
+### 16. 예약 가능 좌석 조회 및 예약용 좌석 ID 추출
+### 기대 결과: 최소 3개 이상의 AVAILABLE 좌석 조회
+# @name getAvailableSeats
+GET {{baseUrl}}/api/v1/performances/{{performanceId}}/seats
+
+> {%
+  const body = response.body;
+  const data = body && body.data;
+  const seats = data && data.seats;
+
+  client.test("예약 가능 좌석 조회 성공", function () {
+    client.assert(response.status === 200,
+        "좌석 조회 실패: HTTP " + response.status +
+        " / body=" + JSON.stringify(body)
+    );
+
+    client.assert(Array.isArray(seats),
+        "data.seats가 배열이 아닙니다: " + JSON.stringify(data)
+    );
+
+    client.assert(seats.length >= 3,
+        "예약/취소 시나리오에 필요한 좌석이 부족합니다: " +
+        JSON.stringify(seats)
+    );
+
+    client.assert(seats[0].performanceSeatId != null,
+        "첫 번째 좌석에 performanceSeatId가 없습니다: " +
+        JSON.stringify(seats[0])
+    );
+
+    client.assert(seats[1].performanceSeatId != null,
+        "두 번째 좌석에 performanceSeatId가 없습니다: " +
+        JSON.stringify(seats[1])
+    );
+  });
+
+  if (Array.isArray(seats) && seats.length >= 3) {
+    client.log("선택된 결제 좌석 1: " + JSON.stringify(seats[0]));
+    client.log("선택된 결제 좌석 2: " + JSON.stringify(seats[1]));
+    client.log("선택된 취소 좌석: " + JSON.stringify(seats[2]));
+
+    client.global.set("paymentSeatId1", seats[0].performanceSeatId);
+    client.global.set("paymentSeatId2", seats[1].performanceSeatId);
+    client.global.set("cancelSeatId", seats[2].performanceSeatId);
+  }
+%}
+
+
+### 17. 결제할 예약 생성: 좌석 2매
+# @name createPaymentReservation
+POST {{baseUrl}}/api/v1/performances/{{performanceId}}/reservations
+Authorization: Bearer {{memberAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "performanceSeatIds": [
+    {{paymentSeatId1}},
+    {{paymentSeatId2}}
+  ]
+}
+
+> {%
+  const body = response.body;
+  const data = body && body.data;
+
+  client.test("결제 대상 예약 생성 성공", function () {
+    client.assert(
+        response.status === 201,
+        "예약 생성 실패: HTTP " + response.status +
+        " / body=" + JSON.stringify(body)
+    );
+
+    client.assert(
+        data && data.reservationId != null,
+        "reservationId가 없습니다: " + JSON.stringify(data)
+    );
+
+    client.assert(
+        data.status === "PENDING_PAYMENT",
+        "예약 상태가 PENDING_PAYMENT가 아닙니다."
+    );
+
+    client.assert(
+        data && Array.isArray(data.seats) && data.seats.length === 2,
+        "예약 좌석 수가 2개가 아닙니다."
+    );
+  });
+
+  if (data && data.reservationId != null) {
+    client.global.set("paymentReservationId", data.reservationId);
+  }
+%}
+
+
+
+### 18. 예약 직후 좌석 상태 검증
+### 기대 결과: 선택한 좌석이 AVAILABLE 목록에서 제외되거나 HELD 처리됨
+GET {{baseUrl}}/api/v1/performances/{{performanceId}}/seats
+
+> {%
+  const ids = response.body.data.seats.map(s => String(s.performanceSeatId));
+  client.test("예약 좌석이 공개 AVAILABLE 목록에서 제외됨", function () {
+    client.assert(!ids.includes(String(client.global.get("paymentSeatId1"))), "첫 번째 예약 좌석이 여전히 AVAILABLE입니다.");
+    client.assert(!ids.includes(String(client.global.get("paymentSeatId2"))), "두 번째 예약 좌석이 여전히 AVAILABLE입니다.");
+  });
+%}
+
+
+### 19. 예약 상세 조회
+### 기대 결과: PENDING_PAYMENT 및 좌석 2개
+GET {{baseUrl}}/api/v1/reservations/{{paymentReservationId}}
+Authorization: Bearer {{memberAccessToken}}
+
+> {%
+  client.test("결제 전 예약 상세 정상", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.seats.length === 2, "예약 좌석 수가 2가 아닙니다.");
+  });
+%}
+
+
+
+### 20. 예약 결제
+### 기대 결과: 결제 완료 및 거래 키 생성
+# @name payReservation
+POST {{baseUrl}}/api/v1/reservations/{{paymentReservationId}}/payments
+Authorization: Bearer {{memberAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "method": "CARD"
+}
+
+> {%
+  client.test("예약 결제 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.paymentId, "paymentId가 없습니다.");
+    client.assert(response.body.data.transactionKey, "transactionKey가 없습니다.");
+  });
+  client.global.set("paymentId", response.body.data.paymentId);
+%}
+
+
+### 21. 결제 완료 후 예약 상세 재조회
+### 기대 결과: 예약 COMPLETED/CONFIRMED, 결제 PAID/SUCCESS 계열 상태
+GET {{baseUrl}}/api/v1/reservations/{{paymentReservationId}}
+Authorization: Bearer {{memberAccessToken}}
+
+> {%
+  client.test("결제 후 예약 상세 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.payment, "결제 정보가 없습니다.");
+    client.assert(response.body.data.payment.paidAt, "결제 완료 시각이 없습니다.");
+  });
+%}
+
+
+### 22. 내 예약 목록에서 결제 예약 확인
+GET {{baseUrl}}/api/v1/members/me/reservations?page=0&size=20&sort=LATEST
+Authorization: Bearer {{memberAccessToken}}
+
+> {%
+  client.test("내 예약 목록 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    const ids = response.body.data.content.map(r => String(r.reservationId));
+    client.assert(ids.includes(String(client.global.get("paymentReservationId"))), "결제 예약이 내 예약 목록에 없습니다.");
+  });
+%}
+
+
+### 23. 취소 검증용 별도 예약 생성: 좌석 1매
+# @name createCancelReservation
+POST {{baseUrl}}/api/v1/performances/{{performanceId}}/reservations
+Authorization: Bearer {{memberAccessToken}}
+Content-Type: {{contentType}}
+
+{
+  "performanceSeatIds": [
+    {{cancelSeatId}}
+  ]
+}
+
+> {%
+  client.test("취소 대상 예약 생성 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+  });
+  const data = response.body.data;
+  client.global.set("cancelReservationId", data.reservationId || data.id);
+%}
+
+
+### 24. 미결제 예약 취소
+### 기대 결과: 예약 취소 처리 및 좌석 반환
+PATCH {{baseUrl}}/api/v1/reservations/{{cancelReservationId}}/cancel
+Authorization: Bearer {{memberAccessToken}}
+
+> {%
+  client.test("예약 취소 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.cancelledAt, "취소 시각이 없습니다.");
+  });
+%}
+
+
+### 25. 취소된 좌석이 다시 예약 가능해졌는지 검증
+GET {{baseUrl}}/api/v1/performances/{{performanceId}}/seats
+
+> {%
+  const ids = response.body.data.seats.map(s => String(s.performanceSeatId));
+  client.test("취소 좌석이 AVAILABLE로 복구됨", function () {
+    client.assert(ids.includes(String(client.global.get("cancelSeatId"))), "취소 좌석이 AVAILABLE 목록으로 복구되지 않았습니다.");
+  });
+%}
+
+
+### 26. 관리자 예약 목록에서 회원/공연/결제 상태 검증
+### paymentStatus enum 값이 PAID가 아니라 SUCCESS/COMPLETED이면 수정하십시오.
+GET {{baseUrl}}/api/v1/admin/reservations?memberId={{memberId}}&performanceId={{performanceId}}&page=0&size=20&sort=LATEST
+Authorization: Bearer {{adminAccessToken}}
+
+> {%
+  client.test("관리자 예약 목록 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.content.length >= 2, "결제 예약과 취소 예약이 모두 조회되지 않습니다.");
+  });
+%}
+
+
+
+### 27. 관리자 공연 목록 필터 조회
+GET {{baseUrl}}/api/v1/admin/performances?concertId={{concertId}}&page=0&size=20&sort=LATEST
+Authorization: Bearer {{adminAccessToken}}
+
+> {%
+  client.test("관리자 공연 필터 조회 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.data.content.length >= 1, "생성한 공연이 조회되지 않습니다.");
+  });
+%}
+
+
+
+### 28. Access Token 재발급
+### JetBrains HTTP Client의 쿠키 저장소가 Set-Cookie를 자동 전달합니다.
+### 명시적으로 쿠키를 넣어야 하는 환경에서는 아래 Cookie 헤더 주석을 해제하십시오.
+# @name reissueToken
+POST {{baseUrl}}/api/v1/auth/reissue
+# Cookie: refreshToken={{memberRefreshToken}}
+
+> {%
+  client.test("토큰 재발급 성공", function () {
+    client.assert(response.status === 200, "HTTP 200이 아닙니다.");
+    client.assert(response.body.newAccessToken || response.body.data?.newAccessToken, "새 Access Token이 없습니다.");
+  });
+  const body = response.body.data || response.body;
+  client.global.set("memberAccessToken", body.newAccessToken);
+  if (body.newRefreshToken) {
+    client.global.set("memberRefreshToken", body.newRefreshToken);
+  }
+%}
+
+
+### 29. 재발급된 Access Token으로 내 정보 조회
+GET {{baseUrl}}/api/v1/members/me
+Authorization: Bearer {{memberAccessToken}}
+
+> {%
+  client.test("재발급 Access Token 사용 성공", function () {
+    client.assert(response.status === 200, "재발급 토큰으로 인증되지 않습니다.");
+  });
+%}
+
+
+
+### 30. 로그아웃
+### 기대 결과: 204 No Content, Refresh Token 폐기
+POST {{baseUrl}}/api/v1/auth/sign-out
+# Cookie: refreshToken={{memberRefreshToken}}
+
+> {%
+  client.test("로그아웃 성공", function () {
+    client.assert(response.status === 204, "HTTP 204가 아닙니다.");
+  });
+%}
+
+
+
+### 선택 실행 A. 로그아웃 후 동일 Refresh Token 재사용 차단 검증
+### Cookie 헤더를 명시적으로 사용하는 경우에만 의미가 명확합니다.
+### 기대 결과: 401 Unauthorized
+POST {{baseUrl}}/api/v1/auth/reissue
+Cookie: refreshToken={{memberRefreshToken}}
+
+> {%
+  client.test("폐기된 Refresh Token 재사용 차단", function () {
+    client.assert(response.status === 401, "폐기된 Refresh Token이 재사용되었습니다.");
+  });
+%}
+
+
+### 선택 실행 B. 결제 완료 예약 취소 정책 검증
+### 정책상 결제 완료 예약 취소를 지원한다면 200, 미지원이면 4xx가 정상입니다.
+PATCH {{baseUrl}}/api/v1/reservations/{{paymentReservationId}}/cancel
+Authorization: Bearer {{memberAccessToken}}
+
+
+### 선택 실행 C. 관리자 좌석 비활성화 검증
+### 먼저 16번 요청에서 사용하지 않은 AVAILABLE performanceSeatId를 별도 저장한 후 실행하십시오.
+# DELETE {{baseUrl}}/api/v1/admin/performance-seats/{{unusedPerformanceSeatId}}
+# Authorization: Bearer {{adminAccessToken}}
+
+
+### 선택 실행 D. 공연 삭제/취소 분기 검증
+### 예약 이력이 있으므로 물리 삭제가 아닌 CANCELLED 계열 상태가 기대됩니다.
+# DELETE {{baseUrl}}/api/v1/admin/performances/{{performanceId}}
+# Authorization: Bearer {{adminAccessToken}}
+
+
+### 선택 실행 E. 테스트 데이터 정리
+### 예약/공연 이력과 FK 정책에 따라 콘서트 삭제가 거부될 수 있습니다.
+# DELETE {{baseUrl}}/api/v1/admin/concerts/{{concertId}}
+# Authorization: Bearer {{adminAccessToken}}
